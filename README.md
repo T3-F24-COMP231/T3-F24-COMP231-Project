@@ -114,4 +114,4 @@ For any questions or support, please reach out to:
 
 - **[GitHub Repository](https://github.com/T3-F24-COMP231/T3-F24-COMP231-Project)**
 - **[Project Documentation](https://www.linktodocs.com)**
-- **[YouTube Demo](https://youtube.com/demo-link)**: 
+- **[YouTube Demo](https://youtube.com/demo-link)**
