@@ -1,0 +1,14 @@
+# Node.js
+node_modules/
+
+# Build output
+/build/
+
+# .env files
+.env
+
+# JetBrains IDEs (IntelliJ/WebStorm)
+.idea/
+
+# MongoDB data files (if applicable)
+*.bak
