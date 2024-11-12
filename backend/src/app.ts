@@ -1,14 +1,23 @@
 import cors from 'cors';
 import express, { Application } from "express";
 import { errorHandler, requestLogger } from "./middlewares";
+import expenseRoutes from './routes/expenseRoutes';
+import incomeRoutes from './routes/incomeRoutes';
 
 const app: Application = express();
 
+// Middlewares used by the app
 app.use(cors());
 app.use(express.json());
 app.use(errorHandler);
 app.use(requestLogger);
 app.use(express.urlencoded({ extended: true }));
+
+
+// Routes to be consuded by the app
+app.use("/api", incomeRoutes);
+app.use("/api", expenseRoutes);
+
 
 // app.use(cors({
 //   origin: 'http://localhost:4000',
