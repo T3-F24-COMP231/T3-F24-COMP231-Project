@@ -1,5 +1,7 @@
 # Node.js
 /node_modules/
+/frontend/node_modules/
+/backend/node_modules/
 /npm-debug.log
 /package-lock.json
 /yarn.lock
@@ -7,8 +9,6 @@
 # Build output for both frontend and backend
 /frontend/build/
 /backend/build/
-/frontend/node_modules/
-/backend/node_modules/
 
 # Expo (Frontend)
 .expo/
@@ -53,13 +53,11 @@ yarn-error.log
 *.bak
 
 # Ignore frontend specific files
-/frontend/.env
-/frontend/node_modules/
+frontend/.env
 frontend/.next/
-/frontend/.idea/
+frontend/.idea/
 
 # Ignore backend specific files
-/backend/.env
-/backend/node_modules/
+backend/.env
 backend/.next/
-/backend/.idea/
+backend/.idea/
