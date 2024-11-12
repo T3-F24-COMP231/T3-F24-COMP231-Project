@@ -3,7 +3,7 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-.env
+/.env
 node_modules
 # User-specific files
 *.rsuser
