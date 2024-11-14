@@ -1,6 +1,6 @@
 import { Category, Expense } from "../models";
 import { ExpressHandler } from "../types";
-import { sendError, sendSuccess } from "../utils";
+import { getStartOfMonth, getStartOfWeek, sendError, sendSuccess } from "../utils";
 
 export const addExpense: ExpressHandler = async (req, res) => {
   try {
@@ -44,5 +44,45 @@ export const updateExpense: ExpressHandler = async (req, res) => {
     sendSuccess(res, updatedExpense, "Expense successfully updated");
   } catch (error) {
     sendError(res, "Failed to update expense", 500);
+  }
+};
+
+
+export const getExpenseSummary: ExpressHandler = async (req, res) => {
+  try {
+    const period = req.query.period as string;
+    const { userId } = req.params;
+
+    if (!period || !['weekly', 'monthly'].includes(period)) {
+      return sendError(res, "Invalid period. Please use 'weekly' or 'monthly'.", 400);
+    }
+
+    // Determine date range based on the period
+    const startDate = period === 'weekly' ? getStartOfWeek() : getStartOfMonth();
+    const endDate = new Date();
+
+    // Aggregate expenses based on the date range
+    const summary = await Expense.aggregate([
+      { $match: { userId, createdAt: { $gte: startDate, $lte: endDate } } },
+      {
+        $group: {
+          _id: "$category",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          category: "$_id",
+          totalAmount: 1,
+          count: 1,
+        },
+      },
+    ]);
+
+    sendSuccess(res, summary, `Expense summary for the ${period}`);
+  } catch (error) {
+    sendError(res, "Failed to fetch expense summary", 500);
   }
 };

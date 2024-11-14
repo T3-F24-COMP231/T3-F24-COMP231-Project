@@ -3,6 +3,8 @@ import express, { Application } from "express";
 import { errorHandler, requestLogger } from "./middlewares";
 import expenseRoutes from './routes/expenseRoutes';
 import incomeRoutes from './routes/incomeRoutes';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
 
 const app: Application = express();
 
@@ -15,8 +17,12 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // Routes to be consuded by the app
-app.use("/api", incomeRoutes);
+app.use("/api", authRoutes);
 app.use("/api", expenseRoutes);
+app.use("/api", incomeRoutes);
+app.use("/api", userRoutes);
+
+
 
 
 // app.use(cors({
