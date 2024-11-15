@@ -5,30 +5,60 @@ import { ExpressHandler } from "../types";
 export const addDebt: ExpressHandler = async (req, res) => {
   try {
     const { title, amount, description } = req.body;
-    const debt = await Debt.create({ title, amount, description });
+    const { userId } = req.params;
+
+    const debt = await Debt.create({ userId, title, amount, description });
     sendSuccess(res, debt, "Debt information successfully added");
   } catch (error) {
-    sendError(res, "Failed to add debt information", 400);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to add debt information: ${errorMessage}`, 500);
   }
 };
 
 export const getDebts: ExpressHandler = async (req, res) => {
   try {
-    const debts = await Debt.find();
-    sendSuccess(res, debts);
+    const { userId } = req.params;
+    const debts = await Debt.find({ userId });
+
+    if (!debts.length) {
+      return sendError(res, "No debts found for this user", 404);
+    }
+
+    sendSuccess(res, debts, "Debts fetched successfully");
   } catch (error) {
-    sendError(res, "Failed to fetch debts", 500);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to fetch debts: ${errorMessage}`, 500);
   }
 };
 
 export const updateDebt: ExpressHandler = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updatedDebt = await Debt.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    const { id, userId } = req.params;
+    const updatedDebt = await Debt.findOneAndUpdate({ _id: id, userId }, req.body, { new: true });
+
+    if (!updatedDebt) {
+      return sendError(res, "Debt not found for this user", 404);
+    }
+
     sendSuccess(res, updatedDebt, "Debt information successfully updated");
   } catch (error) {
-    sendError(res, "Failed to update debt information", 500);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to update debt information: ${errorMessage}`, 500);
+  }
+};
+
+export const deleteDebt: ExpressHandler = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const deletedDebt = await Debt.findOneAndDelete({ _id: id, userId });
+
+    if (!deletedDebt) {
+      return sendError(res, "Debt not found for this user", 404);
+    }
+
+    sendSuccess(res, deletedDebt, "Debt successfully deleted");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to delete debt: ${errorMessage}`, 500);
   }
 };

@@ -1,17 +1,14 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
+import { IDebt } from "../types";
 
-interface IDebt extends Document {
-  title: string;
-  amount: number;
-  description: string;
-  date: Date;
-}
-
-const debtSchema = new Schema({
-  title: { type: String, require: true },
-  amount: { type: Number, required: true },
-  description: { type: String, required: true },
-  date: { type: Date, default: Date.now },
-});
+const debtSchema: Schema = new Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    title: { type: String, required: true },
+    amount: { type: Number, required: true },
+    description: { type: String },
+  },
+  { timestamps: true }
+);
 
 export const Debt = mongoose.model<IDebt>("Debt", debtSchema);

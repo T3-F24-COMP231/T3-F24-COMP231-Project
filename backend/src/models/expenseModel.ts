@@ -1,19 +1,16 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
+import { IExpense } from "../types";
 
-interface IExpense extends Document {
-  title: string;
-  amount: number;
-  description: string;
-  category: string;
-  date: Date;
-}
-
-const expenseSchema = new Schema({
-  title: { type: String, require: true },
-  amount: { type: Number, required: true },
-  description: { type: String, required: true },
-  category: { type: String, required: true },
-  date: { type: Date, default: Date.now },
-});
+const expenseSchema = new Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    title: { type: String, required: true },
+    amount: { type: Number, required: true },
+    description: { type: String, required: true },
+    category: { type: String, required: true },
+    date: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
 
 export const Expense = mongoose.model<IExpense>("Expense", expenseSchema);

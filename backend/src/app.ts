@@ -5,6 +5,7 @@ import expenseRoutes from './routes/expenseRoutes';
 import incomeRoutes from './routes/incomeRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import debtRoutes from './routes/debtRoutes';
 
 const app: Application = express();
 
@@ -21,6 +22,7 @@ app.use("/api", authRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api", incomeRoutes);
 app.use("/api", userRoutes);
+app.use("/api", debtRoutes);
 
 
 

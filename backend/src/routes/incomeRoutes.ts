@@ -1,9 +1,17 @@
 import express from "express";
-import { addIncome, getIncomes, updateIncome } from "../controllers";
+import {
+  addIncome,
+  getIncomes,
+  updateIncome,
+  deleteIncome,
+} from "../controllers";
+import { protect } from "../middlewares";
 
 const router = express.Router();
 
-router.route("/income").post(addIncome);
-router.route("/income").get(getIncomes);
-router.route("/income/:id").put(updateIncome);
+router.post("/users/:userId/income", protect, addIncome);
+router.get("/users/:userId/incomes", protect, getIncomes);
+router.put("/users/:userId/income/:id", protect, updateIncome);
+router.delete("/users/:userId/income/:id", protect, deleteIncome);
+
 export default router;

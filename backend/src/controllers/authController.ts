@@ -1,80 +1,60 @@
-import { Request, Response } from "express";
-import { ExpressHandler } from "../types";
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "../config/config";
 import { sendError, sendSuccess } from "../utils";
-import User from "../models/User";
+import User from "../models/userModel";
+import { ExpressHandler } from "../types";
 
-export const Signup: ExpressHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const Signup: ExpressHandler = async (req, res) => {
   const { name, email, password, role = "Finance Tracker" } = req.body;
 
   try {
-    // Check if user already exists based on email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res.status(400).json({ message: "User already exists with this email" });
+      return sendError(res, "User already exists with this email", 400);
     }
 
-    // Hash the password before storing
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user with the default role as 'Gym Member'
     const newUser = new User({
       name,
       email,
-      role,
       password: hashedPassword,
+      role,
     });
 
-    // Save the user to the database
     await newUser.save();
 
-    res.status(201).json({
-      message: "User created successfully as Finance Tracker",
-      user: newUser,
-    });
+    sendSuccess(res, newUser, "User created successfully as Finance Tracker");
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to create user: ${errorMessage}`, 500);
   }
 };
 
-export const Login: ExpressHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const Login: ExpressHandler = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check if the user exists
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(400).json({ message: "Invalid email or password" });
-      return;
+      return sendError(res, "Invalid email or password", 400);
     }
 
-    // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      res.status(400).json({ message: "Invalid email or password" });
-      return;
+      return sendError(res, "Invalid email or password", 400);
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       config.jwtSecret,
-      {
-        expiresIn: "1h", // Set token expiration as per your requirement
-      }
+      { expiresIn: "1h" }
     );
 
     sendSuccess(res, { token, user }, "Login successful");
   } catch (error) {
-    sendError(res, "Server error", 500);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to log in: ${errorMessage}`, 500);
   }
 };
