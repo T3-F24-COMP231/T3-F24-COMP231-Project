@@ -77,3 +77,18 @@ export const getAllUsers: ExpressHandler = async (req, res) => {
     sendError(res, `Failed to fetch users: ${errorMessage}`, 500);
   }
 };
+
+export const getCurrentUser: ExpressHandler = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return sendError(res, "User not found", 404);
+    }
+
+    sendSuccess(res, user, "Current user fetched successfully");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to fetch current user: ${errorMessage}`, 500);
+  }
+};
