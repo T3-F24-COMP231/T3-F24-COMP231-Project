@@ -80,7 +80,14 @@ export const getAllUsers: ExpressHandler = async (req, res) => {
 
 export const getCurrentUser: ExpressHandler = async (req, res) => {
   try {
-    const user = req.user;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return sendError(res, "User not found", 404);
+    }
+
+    // Fetch the full user information from the database
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return sendError(res, "User not found", 404);

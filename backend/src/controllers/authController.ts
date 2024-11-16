@@ -58,3 +58,13 @@ export const Login: ExpressHandler = async (req, res) => {
     sendError(res, `Failed to log in: ${errorMessage}`, 500);
   }
 };
+
+export const Logout: ExpressHandler = async (req, res) => {
+  try {
+    // On the client side, you would delete the token stored in AsyncStorage or LocalStorage
+    sendSuccess(res, null, "User logged out successfully");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(res, `Failed to log out: ${errorMessage}`, 500);
+  }
+};
