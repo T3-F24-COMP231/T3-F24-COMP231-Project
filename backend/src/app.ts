@@ -6,6 +6,7 @@ import incomeRoutes from './routes/incomeRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import debtRoutes from './routes/debtRoutes';
+import investmentRoutes from './routes/investmentRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 
 const app: Application = express();
@@ -24,6 +25,7 @@ app.use("/api", expenseRoutes);
 app.use("/api", incomeRoutes);
 app.use("/api", userRoutes);
 app.use("/api", debtRoutes);
+app.use("/api", investmentRoutes);
 app.use("/api", categoryRoutes);
 
 
