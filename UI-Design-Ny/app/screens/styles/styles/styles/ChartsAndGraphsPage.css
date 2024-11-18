@@ -1,0 +1,25 @@
+.charts-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.charts-container h2 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    color: #333;
+}
+
+.chart {
+    margin-top: 20px;
+    padding: 30px;
+    background-color: #ffffff;
+    border: 2px dashed #007bff;
+    border-radius: 4px;
+    text-align: center;
+    color: #555;
+}

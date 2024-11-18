@@ -1,0 +1,35 @@
+/* styles/SummaryPage.css */
+.summary-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.date-range-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.date-range-buttons button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #ddd;
+}
+
+.date-range-buttons .active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.summary-details p {
+    font-size: 1.2em;
+    margin: 8px 0;
+}
