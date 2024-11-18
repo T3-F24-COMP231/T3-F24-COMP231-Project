@@ -7,7 +7,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.tabIconSelected,
+        tabBarActiveTintColor: "#4A5DFF",
         tabBarShowLabel: false,
         headerShown: false,
         tabBarStyle: {
@@ -29,6 +29,14 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name="add-outline" color={color} size={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name="notifications-outline" color={color} size={24} />
           ),
         }}
       />

@@ -51,7 +51,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setCurrentUser(data);
       await AsyncStorage.setItem("currentUser", JSON.stringify(data));
     } catch (error) {
-      console.error("Error fetching current user:", error);
       await logout();
     } finally {
       setIsLoading(false);
@@ -78,7 +77,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await AsyncStorage.setItem("currentUser", JSON.stringify(data.user));
       await AsyncStorage.setItem("token", data.token);
     } catch (error) {
-      console.error("Login error:", error);
       throw new Error("Login failed");
     } finally {
       setIsLoading(false);
@@ -105,7 +103,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await AsyncStorage.setItem("currentUser", JSON.stringify(data.user));
       await AsyncStorage.setItem("token", data.token);
     } catch (error) {
-      console.error("Signup error:", error);
       throw new Error("Signup failed");
     } finally {
       setIsLoading(false);
@@ -124,7 +121,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         },
       });
     } catch (error) {
-      console.error("Logout error:", error);
     } finally {
       setCurrentUser(null);
       await AsyncStorage.removeItem("currentUser");

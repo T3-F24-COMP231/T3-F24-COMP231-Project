@@ -1,35 +1,6 @@
 import { BASE_URL } from "@/api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const fetchIncomeSummary = async (userId: string) => {
-  const token = await AsyncStorage.getItem("token");
-  const response = await fetch(`${BASE_URL}/users/${userId}/income/summary`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) throw new Error("Failed to fetch income summary");
-  const data = await response.json();
-  const totalAmount = data.reduce(
-    (sum: number, item: any) => sum + item.amount,
-    0
-  );
-  return { totalAmount };
-};
-
-export const fetchExpenseSummary = async (userId: string) => {
-  const token = await AsyncStorage.getItem("token");
-  const response = await fetch(`${BASE_URL}/users/${userId}/expense/summary`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) throw new Error("Failed to fetch expense summary");
-  const data = await response.json();
-  const totalAmount = data.reduce(
-    (sum: number, item: any) => sum + item.amount,
-    0
-  );
-  return { totalAmount };
-};
-
-const apiRequest = async (
+export const apiRequest = async (
   endpoint: string,
   method: string,
   body?: object,
@@ -40,11 +11,17 @@ const apiRequest = async (
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  // Only include the body for non-GET requests
+  const options: RequestInit = {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  };
+
+  if (body && method !== "GET") {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(`${BASE_URL}${endpoint}`, options);
 
   if (!response.ok) {
     throw new Error(`API request failed with status ${response.status}`);
@@ -53,6 +30,13 @@ const apiRequest = async (
   const data = await response.json();
   return data.data;
 };
+
+
+export const fetchAllIncomes = (userId: string, token: string) =>
+  apiRequest(`/users/${userId}/incomes`, "GET", undefined, token);
+
+export const fetchAllExpenses = (userId: string, token: string) =>
+  apiRequest(`/users/${userId}/expenses`, "GET", undefined, token);
 
 export const addDebt = (userId: string, data: object, token: string) =>
   apiRequest(`/users/${userId}/debt`, "POST", data, token);

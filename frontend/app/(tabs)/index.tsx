@@ -7,51 +7,88 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import {
-  CustomBackground,
-  CustomText,
-  CustomButton,
-  CustomInput,
-} from "@/components";
+import { CustomBackground, CustomText, CustomInput } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
-import { fetchExpenseSummary, fetchIncomeSummary } from "@/utils";
 import { useRouter } from "expo-router";
+import { IExpense, IIncome, IDebt } from "@/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiRequest, formatNumber } from "@/utils";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function HomeScreen() {
-  const { theme } = useTheme();
-  const { currentUser, fetchCurrentUser, isLoading } = useAuth();
-  const [incomesTotal, setIncomesTotal] = useState<number>(0);
-  const [expensesTotal, setExpensesTotal] = useState<number>(0);
+export default function Index() {
+  const {theme} = useTheme();
+  const { currentUser, isLoading } = useAuth();
+  const [incomes, setIncomes] = useState<IIncome[]>([]);
+  const [expenses, setExpenses] = useState<IExpense[]>([]);
+  const [debts, setDebts] = useState<IDebt[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
   const router = useRouter();
-console.log(currentUser?._id)
+
+  // Redirect if user is not logged in and not loading
   useEffect(() => {
-    if (!currentUser) {
-      fetchCurrentUser();
+    if (!currentUser && !isLoading) {
+      router.replace("/(auth)/login");
     }
-  }, [currentUser]);
+  }, [currentUser, isLoading, router]);
 
+  // Fetch data from the backend
   useEffect(() => {
-    if (currentUser) {
-      loadSummaryData();
-    }
-  }, [currentUser]);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (currentUser?._id && token) {
+          // Fetch incomes
+          const incomesData = await apiRequest(
+            `/users/${currentUser._id}/incomes`,
+            "GET",
+            undefined,
+            token
+          );
+          setIncomes(incomesData || []);
 
-  const loadSummaryData = async () => {
-    try {
-      if (currentUser?._id) {
-        const incomeData = await fetchIncomeSummary(currentUser._id);
-        const expenseData = await fetchExpenseSummary(currentUser._id);
+          // Fetch expenses
+          const expensesData = await apiRequest(
+            `/users/${currentUser._id}/expenses`,
+            "GET",
+            undefined,
+            token
+          );
+          setExpenses(expensesData || []);
 
-        setIncomesTotal(incomeData.totalAmount || 0);
-        setExpensesTotal(expenseData.totalAmount || 0);
+          // Fetch debts
+          const debtsData = await apiRequest(
+            `/users/${currentUser._id}/debts`,
+            "GET",
+            undefined,
+            token
+          );
+          setDebts(debtsData || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to load summary data:", error);
-    }
-  };
+    };
 
-  if (isLoading) {
+    if (currentUser) {
+      fetchData();
+    }
+  }, [currentUser]);
+
+  // Calculate total income, expense, and debt
+  const getTotalIncome = () =>
+    incomes.reduce((total, income) => total + (income.amount || 0), 0);
+
+  const getTotalExpense = () =>
+    expenses.reduce((total, expense) => total + (expense.amount || 0), 0);
+
+  const getTotalDebt = () =>
+    debts.reduce((total, debt) => total + (debt.amount || 0), 0);
+
+  if (isLoading || loading) {
     return (
       <CustomBackground style={styles.container}>
         <ActivityIndicator size="large" color="#4a5dff" />
@@ -59,60 +96,58 @@ console.log(currentUser?._id)
     );
   }
 
-  if (!currentUser) {
-    router.push("/(auth)/login");
-    return null;
-  }
-
   return (
     <CustomBackground style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        {/* User Profile Section */}
-        <View style={styles.profileSection}>
-          <CustomText style={styles.userName}>{currentUser.name}</CustomText>
-          <CustomText style={styles.userRole}>{currentUser.role}</CustomText>
-        </View>
+      {currentUser ? (
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          {/* User Profile Section */}
+          <View style={styles.profileSection}>
+            <CustomText style={styles.userName}>Welcome, {currentUser.name}</CustomText>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/notifications")}>
+            <Ionicons name="notifications-outline" color={theme.text} size={24} />
+            </TouchableOpacity>
+          </View>
 
-        {/* Search Bar */}
-        <CustomInput
-          placeholder="Search.."
-          value={search}
-          onChangeText={setSearch}
-        />
+          {/* Current Balance Section */}
+          <View style={styles.balanceSection}>
+            <CustomText style={styles.balanceLabel}>Current Balance</CustomText>
+            <CustomText style={styles.balanceAmount}>
+              ${formatNumber(getTotalIncome() - getTotalExpense() - getTotalDebt())}
+            </CustomText>
+          </View>
 
-        {/* Current Balance Section */}
-        <View style={styles.balanceSection}>
-          <CustomText style={styles.balanceLabel}>Current Balance</CustomText>
-          <CustomText style={styles.balanceAmount}>
-            ${incomesTotal - expensesTotal}
-          </CustomText>
-        </View>
-
-        {/* Income and Expense Summary */}
-        <View style={styles.summarySection}>
-          <TouchableOpacity style={[styles.card, styles.incomeCard]}>
-            <CustomText style={styles.cardTitle}>Income</CustomText>
-            <CustomText style={styles.cardAmount}>${incomesTotal}</CustomText>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.card, styles.expenseCard]}>
-            <CustomText style={styles.cardTitle}>Expense</CustomText>
-            <CustomText style={styles.cardAmount}>${expensesTotal}</CustomText>
-          </TouchableOpacity>
-        </View>
-
-        {/* Transaction List Header */}
-        <CustomText style={styles.transactionHeader}>Transactions</CustomText>
-
-        {/* Transaction Items (Placeholder) */}
-        <View style={styles.transactionItem}>
-          <CustomText>Utility Bill</CustomText>
-          <CustomText>$500.12</CustomText>
-        </View>
-        <View style={styles.transactionItem}>
-          <CustomText>Shopping</CustomText>
-          <CustomText>$200.50</CustomText>
-        </View>
-      </ScrollView>
+          {/* Income, Expense, and Debt Summary */}
+          <View style={styles.summarySection}>
+            <TouchableOpacity
+              style={[styles.card, styles.incomeCard]}
+              onPress={() => router.push("/(screens)/IncomeScreen")}
+            >
+              <CustomText style={styles.cardTitle}>Total Income</CustomText>
+              <CustomText style={styles.cardAmount}>
+                ${formatNumber(getTotalIncome())}
+              </CustomText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.card, styles.expenseCard]}
+              onPress={() => router.push("/(screens)/ExpenseScreen")}
+            >
+              <CustomText style={styles.cardTitle}>Total Expense</CustomText>
+              <CustomText style={styles.cardAmount}>
+                ${formatNumber(getTotalExpense())}
+              </CustomText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.card, styles.debtCard]}
+              onPress={() => router.push("/(screens)/DebtScreen")}
+            >
+              <CustomText style={styles.cardTitle}>Total Debt</CustomText>
+              <CustomText style={styles.cardAmount}>
+                ${formatNumber(getTotalDebt())}
+              </CustomText>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      ) : null}
     </CustomBackground>
   );
 }
@@ -130,12 +165,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 40,
   },
   userName: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#ffffff",
   },
   userRole: {
     fontSize: 14,
@@ -164,13 +198,16 @@ const styles = StyleSheet.create({
     color: "#4a5dff",
   },
   summarySection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     width: "100%",
+    alignItems: "center",
+    marginHorizontal: "auto",
+    flexWrap: "wrap",
     marginBottom: 20,
+    rowGap: 20,
   },
   card: {
     flex: 1,
+    width: "95%",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
@@ -182,29 +219,16 @@ const styles = StyleSheet.create({
   expenseCard: {
     backgroundColor: "#d63031",
   },
+  debtCard: {
+    backgroundColor: "#ff6347",
+  },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 30,
     color: "#ffffff",
   },
   cardAmount: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#ffffff",
-  },
-  transactionHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffffff",
-    alignSelf: "flex-start",
-    marginBottom: 10,
-  },
-  transactionItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 15,
-    backgroundColor: "#2c3e50",
-    borderRadius: 10,
-    width: "100%",
-    marginBottom: 10,
   },
 });

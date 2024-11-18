@@ -11,8 +11,10 @@ import { Colors } from "../components/constants";
 
 type ThemeContextType = {
   theme: Theme;
+  isDarkMode: boolean;
   toggleMode: () => void;
 };
+
 interface ThemeProviderProps {
   children: ReactNode;
 }
@@ -23,6 +25,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [mode, setMode] = useState<ColorSchemeName>(
     Appearance.getColorScheme() || "light"
   );
+
+  // Determine if the current mode is dark
+  const isDarkMode = mode === "dark";
 
   useEffect(() => {
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
@@ -38,15 +43,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
   };
 
+  // Get the current theme colors based on the mode
   const currentTheme = Colors[mode as keyof typeof Colors];
 
   return (
-    <ThemeContext.Provider value={{ theme: currentTheme, toggleMode }}>
+    <ThemeContext.Provider value={{ theme: currentTheme, isDarkMode, toggleMode }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
+// Custom hook to access the theme context
 const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
@@ -54,4 +61,5 @@ const useTheme = () => {
   }
   return context;
 };
+
 export default useTheme;
