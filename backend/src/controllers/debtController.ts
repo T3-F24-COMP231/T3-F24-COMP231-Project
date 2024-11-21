@@ -7,6 +7,10 @@ export const addDebt: ExpressHandler = async (req, res) => {
     const { title, amount, description } = req.body;
     const { userId } = req.params;
 
+    if (!title || !amount) {
+      return sendError(res, "Title and amount are required", 400);
+    }
+
     const debt = await Debt.create({ userId, title, amount, description });
     sendSuccess(res, debt, "Debt information successfully added");
   } catch (error) {
@@ -18,10 +22,15 @@ export const addDebt: ExpressHandler = async (req, res) => {
 export const getDebts: ExpressHandler = async (req, res) => {
   try {
     const { userId } = req.params;
+
+    if (!userId) {
+      return sendError(res, "User ID is required", 400);
+    }
+
     const debts = await Debt.find({ userId });
 
     if (!debts.length) {
-      return sendError(res, "No debts found for this user", 404);
+      return sendSuccess(res, [], "No expenses found for this user");
     }
 
     sendSuccess(res, debts, "Debts fetched successfully");
@@ -34,6 +43,11 @@ export const getDebts: ExpressHandler = async (req, res) => {
 export const updateDebt: ExpressHandler = async (req, res) => {
   try {
     const { id, userId } = req.params;
+
+    if (!id || !userId) {
+      return sendError(res, "Debt ID and User ID are required", 400);
+    }
+
     const updatedDebt = await Debt.findOneAndUpdate({ _id: id, userId }, req.body, { new: true });
 
     if (!updatedDebt) {
@@ -50,6 +64,11 @@ export const updateDebt: ExpressHandler = async (req, res) => {
 export const deleteDebt: ExpressHandler = async (req, res) => {
   try {
     const { id, userId } = req.params;
+
+    if (!id || !userId) {
+      return sendError(res, "Debt ID and User ID are required", 400);
+    }
+
     const deletedDebt = await Debt.findOneAndDelete({ _id: id, userId });
 
     if (!deletedDebt) {

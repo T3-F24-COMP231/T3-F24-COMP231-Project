@@ -5,9 +5,11 @@ import {
   TouchableOpacity,
   FlatList,
   Text,
+  View,
 } from "react-native";
 import {
   CustomBackground,
+  CustomBottomSheet,
   CustomButton,
   CustomInput,
   CustomModal,
@@ -119,42 +121,48 @@ export default function AddExpenseScreen() {
   return (
     <KeyboardLayout>
       <CustomBackground style={styles.container}>
-        <CustomText style={styles.title}>Add New Expense</CustomText>
-        <CustomInput
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-          style={styles.input}
-        />
-        <CustomInput
-          placeholder="Amount"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-          style={styles.input}
-        />
-        <CustomInput
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-          style={styles.input}
-        />
+        <CustomBottomSheet title="Add New Expense">
+          <View style={styles.content}>
+            <CustomInput
+              placeholder="Title"
+              value={title}
+              onChangeText={setTitle}
+              style={styles.input}
+            />
+            <CustomInput
+              placeholder="Amount"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              style={styles.input}
+            />
+            <CustomInput
+              placeholder="Description"
+              value={description}
+              onChangeText={setDescription}
+              style={styles.input}
+            />
 
-        {/* Category Selection */}
-        <TouchableOpacity
-          style={styles.categoryButton}
-          onPress={() => setShowCategoryModal(true)}
-        >
-          <CustomText style={{ fontSize: 14, color: "#000", fontWeight: "500" }}>
-            {selectedCategory || "Select a Category"}
-          </CustomText>
-        </TouchableOpacity>
+            {/* Category Selection */}
+            <TouchableOpacity
+              style={styles.categoryButton}
+              onPress={() => setShowCategoryModal(true)}
+            >
+              <CustomText
+                style={{ fontSize: 14, color: "#000", fontWeight: "500" }}
+              >
+                {selectedCategory || "Select a Category"}
+              </CustomText>
+            </TouchableOpacity>
 
-        <CustomButton
-          text="Submit Expense"
-          onPress={handleAddExpense}
-          style={styles.button}
-        />
+            <CustomButton
+              text="Submit Expense"
+              onPress={handleAddExpense}
+              style={styles.button}
+            />
+          </View>
+        </CustomBottomSheet>
+        {/* <CustomText style={styles.title}>Add New Expense</CustomText> */}
 
         {/* Category Modal */}
         <CustomModal
@@ -181,10 +189,6 @@ export default function AddExpenseScreen() {
                 </TouchableOpacity>
               )}
             />
-            <CustomButton
-              text="Close"
-              onPress={() => setShowCategoryModal(false)}
-            />
           </CustomBackground>
         </CustomModal>
       </CustomBackground>
@@ -195,9 +199,12 @@ export default function AddExpenseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    paddingHorizontal: 20,
+    justifyContent: "flex-end",
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 24,
@@ -223,7 +230,8 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    width: "100%",
     justifyContent: "center",
   },
   modalItem: {
