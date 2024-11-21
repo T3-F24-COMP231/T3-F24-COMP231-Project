@@ -1,7 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IUser } from "../types";
 import { BASE_URL } from "@/api";
+import { Alert } from "react-native";
+import { router } from "expo-router";
 
 interface AuthContextType {
   currentUser: IUser | null;
@@ -31,7 +39,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
-        setIsLoading(false);
+        setCurrentUser(null);
         return;
       }
 
@@ -77,7 +85,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await AsyncStorage.setItem("currentUser", JSON.stringify(data.user));
       await AsyncStorage.setItem("token", data.token);
     } catch (error) {
-      throw new Error("Login failed");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occured";
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -95,15 +104,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       });
 
       if (!response.ok) {
-        throw new Error("Signup failed");
+        throw new Error(`Signup failed with status ${response.status}`);
       }
 
-      const { data } = await response.json();
-      setCurrentUser(data.user);
-      await AsyncStorage.setItem("currentUser", JSON.stringify(data.user));
-      await AsyncStorage.setItem("token", data.token);
+      const { message } = await response.json();
+      Alert.alert("Success", message || "Account created successfully!");
+      router.push("/(auth)/login");
     } catch (error) {
-      throw new Error("Signup failed");
+      console.error("Signup Error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occured";
+      Alert.alert("Signup Failed", errorMessage || "An error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +141,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, isLoading, login, signup, fetchCurrentUser, logout }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        isLoading,
+        login,
+        signup,
+        fetchCurrentUser,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,24 +1,25 @@
 import React, { useState } from "react";
-import { StyleSheet, Alert } from "react-native";
+import { StyleSheet, Alert, View } from "react-native";
 import {
   CustomBackground,
+  CustomBottomSheet,
   CustomButton,
   CustomInput,
-  CustomText,
   KeyboardLayout,
 } from "@/components";
 import { addDebt } from "@/utils";
-import { useAuth } from "@/hooks";
+import { useAuth, useTheme } from "@/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 
 export default function AddDebtScreen() {
+  const { theme } = useTheme();
   const { currentUser } = useAuth();
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
 
-  // Reset form fields
   const resetForm = () => {
     setTitle("");
     setAmount("");
@@ -65,31 +66,37 @@ export default function AddDebtScreen() {
   return (
     <KeyboardLayout>
       <CustomBackground style={styles.container}>
-        <CustomText style={styles.title}>Add New Debt</CustomText>
-        <CustomInput
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-          style={styles.input}
-        />
-        <CustomInput
-          placeholder="Amount"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-          style={styles.input}
-        />
-        <CustomInput
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-          style={styles.input}
-        />
-        <CustomButton
-          text="Submit Debt"
-          onPress={handleAddDebt}
-          style={styles.button}
-        />
+        <CustomBottomSheet
+          title="Add New Debt"
+          style={{ backgroundColor: theme.background }}
+        >
+          <View style={styles.content}>
+            <CustomInput
+              placeholder="Title"
+              value={title}
+              onChangeText={setTitle}
+              style={styles.input}
+            />
+            <CustomInput
+              placeholder="Amount"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              style={styles.input}
+            />
+            <CustomInput
+              placeholder="Description"
+              value={description}
+              onChangeText={setDescription}
+              style={styles.input}
+            />
+            <CustomButton
+              text="Submit Debt"
+              onPress={handleAddDebt}
+              style={styles.button}
+            />
+          </View>
+        </CustomBottomSheet>
       </CustomBackground>
     </KeyboardLayout>
   );
@@ -98,15 +105,12 @@ export default function AddDebtScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    paddingHorizontal: 20,
-    justifyContent: "center",
+    justifyContent: "flex-end",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
+  content: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 20,
   },
   input: {
     width: "100%",

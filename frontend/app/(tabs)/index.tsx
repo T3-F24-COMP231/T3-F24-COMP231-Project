@@ -3,26 +3,25 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   ScrollView,
   ActivityIndicator,
+  Text,
 } from "react-native";
-import { CustomBackground, CustomText, CustomInput } from "@/components";
+import { CustomBackground, CustomText } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import { useRouter } from "expo-router";
 import { IExpense, IIncome, IDebt } from "@/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiRequest, formatNumber } from "@/utils";
+import { apiRequest, CleanOutput } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Index() {
-  const {theme} = useTheme();
+  const { theme } = useTheme();
   const { currentUser, isLoading } = useAuth();
   const [incomes, setIncomes] = useState<IIncome[]>([]);
   const [expenses, setExpenses] = useState<IExpense[]>([]);
   const [debts, setDebts] = useState<IDebt[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [search, setSearch] = useState<string>("");
   const router = useRouter();
 
   // Redirect if user is not logged in and not loading
@@ -99,52 +98,133 @@ export default function Index() {
   return (
     <CustomBackground style={styles.container}>
       {currentUser ? (
-        <ScrollView contentContainerStyle={styles.scrollView}>
+        <ScrollView
+          contentContainerStyle={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
           {/* User Profile Section */}
           <View style={styles.profileSection}>
-            <CustomText style={styles.userName}>Welcome, {currentUser.name}</CustomText>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/notifications")}>
-            <Ionicons name="notifications-outline" color={theme.text} size={24} />
+            <CustomText style={styles.userName}>
+              Welcome, {currentUser.name}
+            </CustomText>
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/notifications")}
+            >
+              <Ionicons
+                name="notifications-outline"
+                color={theme.text}
+                size={24}
+              />
             </TouchableOpacity>
           </View>
 
           {/* Current Balance Section */}
           <View style={styles.balanceSection}>
             <CustomText style={styles.balanceLabel}>Current Balance</CustomText>
-            <CustomText style={styles.balanceAmount}>
-              ${formatNumber(getTotalIncome() - getTotalExpense() - getTotalDebt())}
-            </CustomText>
+            <Text style={styles.balanceAmount}>
+              $
+              {CleanOutput(
+                getTotalIncome() - getTotalExpense() - getTotalDebt()
+              )}
+            </Text>
           </View>
 
           {/* Income, Expense, and Debt Summary */}
           <View style={styles.summarySection}>
-            <TouchableOpacity
-              style={[styles.card, styles.incomeCard]}
-              onPress={() => router.push("/(screens)/IncomeScreen")}
-            >
-              <CustomText style={styles.cardTitle}>Total Income</CustomText>
-              <CustomText style={styles.cardAmount}>
-                ${formatNumber(getTotalIncome())}
-              </CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.card, styles.expenseCard]}
-              onPress={() => router.push("/(screens)/ExpenseScreen")}
-            >
-              <CustomText style={styles.cardTitle}>Total Expense</CustomText>
-              <CustomText style={styles.cardAmount}>
-                ${formatNumber(getTotalExpense())}
-              </CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.card, styles.debtCard]}
-              onPress={() => router.push("/(screens)/DebtScreen")}
-            >
-              <CustomText style={styles.cardTitle}>Total Debt</CustomText>
-              <CustomText style={styles.cardAmount}>
-                ${formatNumber(getTotalDebt())}
-              </CustomText>
-            </TouchableOpacity>
+            <View style={styles.card}>
+              <View style={styles.cardTitle}>
+                <Text style={styles.cardTitleText}>Income</Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/(screens)/IncomeScreen")}
+                  style={styles.cardTitleButton}
+                >
+                  <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
+                  <Ionicons name="arrow-forward" size={16} color="#4A5DFF" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.cardContent}>
+                <View style={styles.currency}>
+                  <Text style={styles.currencyText}>$</Text>
+                </View>
+                <View style={styles.cardTotalView}>
+                  <Text style={styles.cardTotalText}>Today's Total</Text>
+                  <Text style={styles.cardAmount}>
+                    {CleanOutput(getTotalIncome())}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => router.push("/(screens)/AddIncomeScreen")}
+              >
+                <Ionicons name="add-circle" size={16} color="#4A5DFF" />
+                <Text style={styles.actionButtonText}>Add New Income</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.card}>
+              <View style={styles.cardTitle}>
+                <Text style={styles.cardTitleText}>Expense</Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/(screens)/ExpenseScreen")}
+                  style={styles.cardTitleButton}
+                >
+                  <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
+                  <Ionicons name="arrow-forward" size={16} color="#4A5DFF" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.cardContent}>
+                <View style={styles.currency}>
+                  <Text style={styles.currencyText}>$</Text>
+                </View>
+                <View style={styles.cardTotalView}>
+                  <Text style={styles.cardTotalText}>Today's Total</Text>
+                  <Text style={styles.cardAmount}>
+                    {CleanOutput(getTotalExpense())}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => router.push("/(screens)/AddExpenseScreen")}
+              >
+                <Ionicons name="add-circle" size={16} color="#4A5DFF" />
+                <Text style={styles.actionButtonText}>Add New Expense</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.card}>
+              <View style={styles.cardTitle}>
+                <Text style={styles.cardTitleText}>Debt</Text>
+                <TouchableOpacity
+                  onPress={() => router.push("/(screens)/DebtScreen")}
+                  style={styles.cardTitleButton}
+                >
+                  <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
+                  <Ionicons name="arrow-forward" size={16} color="#4A5DFF" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.cardContent}>
+                <View style={styles.currency}>
+                  <Text style={styles.currencyText}>$</Text>
+                </View>
+                <View style={styles.cardTotalView}>
+                  <Text style={styles.cardTotalText}>Today's Total</Text>
+                  <Text style={styles.cardAmount}>
+                    {CleanOutput(getTotalDebt())}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => router.push("/(screens)/AddDebtScreen")}
+              >
+                <Ionicons name="add-circle" size={16} color="#4A5DFF" />
+                <Text style={styles.actionButtonText}>Add New Debt</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       ) : null}
@@ -182,20 +262,20 @@ const styles = StyleSheet.create({
   balanceSection: {
     width: "100%",
     padding: 20,
-    backgroundColor: "#1e1f38",
+    backgroundColor: "#040D12",
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 20,
   },
   balanceLabel: {
-    fontSize: 16,
+    fontSize: 20,
     color: "#ffffff",
     marginBottom: 5,
   },
   balanceAmount: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#4a5dff",
+    fontSize: 30,
+    fontWeight: "800",
+    color: "#4A5DFF",
   },
   summarySection: {
     width: "100%",
@@ -208,27 +288,83 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     width: "95%",
-    padding: 15,
     borderRadius: 10,
     alignItems: "center",
     marginHorizontal: 5,
-  },
-  incomeCard: {
-    backgroundColor: "#2d3436",
-  },
-  expenseCard: {
-    backgroundColor: "#d63031",
-  },
-  debtCard: {
-    backgroundColor: "#ff6347",
+    backgroundColor: "#040D12",
   },
   cardTitle: {
+    width: "100%",
+    height: 30,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#393E46",
+    paddingHorizontal: 15,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  cardTitleText: {
+    fontSize: 20,
+    color: "#4A5DFF",
+  },
+  cardTitleButton: {
+    width: "50%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  cardTitleButtonText: {
+    color: "#9BA4B4",
+  },
+  cardContent: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingVertical: 20,
+    columnGap: 20,
+  },
+  currency: {
+    height: 50,
+    width: 50,
+    borderRadius: 100,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#31363F",
+  },
+  currencyText: {
     fontSize: 30,
-    color: "#ffffff",
+    fontWeight: "600",
+    color: "#4A5DFF",
+  },
+  cardTotalView: {
+    rowGap: 5,
+  },
+  cardTotalText: {
+    fontSize: 20,
+    color: "gray",
   },
   cardAmount: {
     fontSize: 24,
-    fontWeight: "bold",
     color: "#ffffff",
+  },
+  actionButton: {
+    width: "95%",
+    height: 40,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    backgroundColor: "#393E46",
+    paddingHorizontal: 15,
+    borderRadius: 7,
+    columnGap: 10,
+    marginBottom: 10,
+  },
+  actionButtonText: {
+    fontSize: 18,
+    color: "white",
   },
 });

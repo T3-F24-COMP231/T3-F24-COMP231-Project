@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { StyleSheet, Alert } from "react-native";
+import { StyleSheet, Alert, View } from "react-native";
 import {
   CustomBackground,
+  CustomBottomSheet,
   CustomButton,
   CustomInput,
   CustomText,
@@ -66,31 +67,35 @@ export default function AddIncomeScreen() {
   return (
     <KeyboardLayout>
       <CustomBackground style={styles.container}>
-        <CustomText style={styles.title}>Add New Income</CustomText>
-        <CustomInput
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-          style={styles.input}
-        />
-        <CustomInput
-          placeholder="Amount"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-          style={styles.input}
-        />
-        <CustomInput
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-          style={styles.input}
-        />
-        <CustomButton
-          text="Submit Income"
-          onPress={handleAddIncome}
-          style={styles.button}
-        />
+        <CustomText style={styles.title}></CustomText>
+        <CustomBottomSheet title="Add New Income">
+          <View style={styles.content}>
+            <CustomInput
+              placeholder="Title"
+              value={title}
+              onChangeText={setTitle}
+              style={styles.input}
+            />
+            <CustomInput
+              placeholder="Amount"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              style={styles.input}
+            />
+            <CustomInput
+              placeholder="Description"
+              value={description}
+              onChangeText={setDescription}
+              style={styles.input}
+            />
+            <CustomButton
+              text="Submit Income"
+              onPress={handleAddIncome}
+              style={styles.button}
+            />
+          </View>
+        </CustomBottomSheet>
       </CustomBackground>
     </KeyboardLayout>
   );
@@ -99,9 +104,12 @@ export default function AddIncomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: "100%",
-    paddingHorizontal: 20,
+    justifyContent: "flex-end",
+  },
+  content: {
+    flex: 1,
     justifyContent: "center",
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 24,

@@ -23,7 +23,6 @@ import { apiRequest } from "@/utils";
 import Checkbox from "expo-checkbox";
 
 export default function IncomesScreen() {
-  const { theme } = useTheme();
   const { currentUser } = useAuth();
   const [incomes, setIncomes] = useState<IIncome[]>([]);
   const [filteredIncomes, setFilteredIncomes] = useState<IIncome[]>([]);

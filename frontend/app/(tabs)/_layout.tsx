@@ -25,10 +25,10 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="add"
+        name="transactions"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name="add-outline" color={color} size={24} />
+            <Ionicons name="menu" color={color} size={24} />
           ),
         }}
       />
