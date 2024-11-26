@@ -7,7 +7,7 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
-import { CustomBackground, CustomText } from "@/components";
+import { CustomBackground, CustomHeader, CustomText } from "@/components";
 import { useAuth } from "@/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiRequest } from "@/utils";
@@ -17,7 +17,7 @@ interface Transaction {
   title: string;
   amount: number;
   description: string;
-  type: "income" | "debt" | "expense";
+  type: "income" | "debt" | "expense" | "investment";
   createdAt: string;
 }
 
@@ -33,27 +33,33 @@ const TransactionScreen = () => {
         const token = await AsyncStorage.getItem("token");
         if (!currentUser?._id || !token) return;
 
-        // Fetch all types of transactions
-        const [incomeData, debtData, expenseData] = await Promise.all([
-          apiRequest(
-            `/users/${currentUser._id}/incomes`,
-            "GET",
-            undefined,
-            token
-          ),
-          apiRequest(
-            `/users/${currentUser._id}/debts`,
-            "GET",
-            undefined,
-            token
-          ),
-          apiRequest(
-            `/users/${currentUser._id}/expenses`,
-            "GET",
-            undefined,
-            token
-          ),
-        ]);
+        const [incomeData, debtData, expenseData, investmentData] =
+          await Promise.all([
+            apiRequest(
+              `/users/${currentUser._id}/incomes`,
+              "GET",
+              undefined,
+              token
+            ),
+            apiRequest(
+              `/users/${currentUser._id}/debts`,
+              "GET",
+              undefined,
+              token
+            ),
+            apiRequest(
+              `/users/${currentUser._id}/expenses`,
+              "GET",
+              undefined,
+              token
+            ),
+            apiRequest(
+              `/users/${currentUser._id}/investments`,
+              "GET",
+              undefined,
+              token
+            ),
+          ]);
 
         // Combine and label transactions
         const formattedTransactions: Transaction[] = [
@@ -68,6 +74,10 @@ const TransactionScreen = () => {
           ...(expenseData || []).map((item: any) => ({
             ...item,
             type: "expense",
+          })),
+          ...(investmentData || []).map((item: any) => ({
+            ...item,
+            type: "investment",
           })),
         ];
 
@@ -98,11 +108,7 @@ const TransactionScreen = () => {
 
   return (
     <CustomBackground style={styles.container}>
-      <View style={{ marginBottom: 10 }}>
-        <CustomText style={{ fontSize: 30, fontWeight: "bold" }}>
-          Transactions
-        </CustomText>
-      </View>
+      <CustomHeader title="Transactions" />
 
       <FlatList
         data={transactions}
@@ -113,7 +119,9 @@ const TransactionScreen = () => {
               ? "green"
               : item.type === "debt"
               ? "yellow"
-              : "red";
+              : item.type === "expense"
+              ? "red"
+              : "#4a5dff";
 
           return (
             <View style={styles.itemContainer}>
@@ -130,7 +138,7 @@ const TransactionScreen = () => {
 
                 <CustomText>
                   <Text style={{ color: textColor }}>
-                    {item.type === "income"
+                    {item.type === "income" || item.type === "investment"
                       ? "+"
                       : item.type === "expense"
                       ? "-"

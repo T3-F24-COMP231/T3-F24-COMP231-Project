@@ -1,5 +1,13 @@
 import React from "react";
-import { StyleSheet, View, Switch, Appearance, Image } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Switch,
+  Appearance,
+  Image,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import {
   CustomBackground,
   CustomButton,
@@ -9,6 +17,7 @@ import {
 import { useAuth, useTheme } from "@/hooks";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { hasPermission } from "@/utils";
 
 export default function Settings() {
   const { logout } = useAuth();
@@ -37,9 +46,7 @@ export default function Settings() {
         {/* Header with caret left icon */}
         <CustomHeader title="Settings" />
         <View style={{ height: "80%" }}>
-          <View
-            style={styles.avatarWrapper}
-          >
+          <View style={styles.avatarWrapper}>
             <Image
               source={require("../../assets/images/background-1.jpg")}
               alt="Profile Image"
@@ -48,23 +55,38 @@ export default function Settings() {
             <CustomText style={styles.title}>{currentUser?.name}</CustomText>
           </View>
           <View style={styles.section}>
-            <View>
-              <CustomText style={[styles.sectionTitle, { color: theme.text }]}>
-                Appearance
-              </CustomText>
-              <CustomText
-                style={[styles.sectionDescription, { color: theme.text }]}
+            {currentUser && !hasPermission(currentUser, "view:users") && (
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => router.push("/(screens)/admin")}
               >
-                {isDarkMode ? "Dark mode is on" : "Light mode is on"}
-              </CustomText>
-            </View>
+                <CustomText>Manage Users and Roles</CustomText>
+                <Ionicons name="chevron-forward" size={24} color={theme.text} />
+              </TouchableOpacity>
+            )}
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+            >
+              <View>
+                <CustomText
+                  style={[styles.sectionTitle, { color: theme.text }]}
+                >
+                  Appearance
+                </CustomText>
+                <CustomText
+                  style={[styles.sectionDescription, { color: theme.text }]}
+                >
+                  {isDarkMode ? "Dark mode is on" : "Light mode is on"}
+                </CustomText>
+              </View>
 
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleMode}
-              thumbColor={isDarkMode ? "#4a5dff" : "#f0f0f0"}
-              trackColor={{ false: "#4a5dff", true: "#fff" }}
-            />
+              <Switch
+                value={isDarkMode}
+                onValueChange={toggleMode}
+                thumbColor={isDarkMode ? "#4a5dff" : "#f0f0f0"}
+                trackColor={{ false: "#4a5dff", true: "#fff" }}
+              />
+            </View>
           </View>
         </View>
         {/* Appearance Section */}
@@ -109,11 +131,9 @@ const styles = StyleSheet.create({
   },
   section: {
     width: "100%",
-    flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 10,
-    borderBottomWidth: 0.5,
-    borderColor: "#ddd",
+    rowGap: 20,
   },
   sectionTitle: {
     fontSize: 18,
@@ -124,6 +144,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
     marginBottom: 10,
+  },
+  button: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
   logoutButton: {
     width: "100%",

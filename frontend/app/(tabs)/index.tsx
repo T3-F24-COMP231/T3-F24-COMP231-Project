@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Text,
 } from "react-native";
-import { CustomBackground, CustomText } from "@/components";
+import { CustomBackground, CustomHeader, CustomText } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import { useRouter } from "expo-router";
 import { IExpense, IIncome, IDebt } from "@/types";
@@ -102,21 +102,20 @@ export default function Index() {
           contentContainerStyle={styles.scrollView}
           showsVerticalScrollIndicator={false}
         >
-          {/* User Profile Section */}
-          <View style={styles.profileSection}>
-            <CustomText style={styles.userName}>
-              Welcome, {currentUser.name}
-            </CustomText>
-            <TouchableOpacity
-              onPress={() => router.push("/(tabs)/notifications")}
-            >
-              <Ionicons
-                name="notifications-outline"
-                color={theme.text}
-                size={24}
-              />
-            </TouchableOpacity>
-          </View>
+          <CustomHeader
+            title={`Welcome, ${currentUser.name}`}
+            rightItems={[
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)/notifications")}
+              >
+                <Ionicons
+                  name="notifications-outline"
+                  color={theme.text}
+                  size={24}
+                />
+              </TouchableOpacity>,
+            ]}
+          />
 
           {/* Current Balance Section */}
           <View style={styles.balanceSection}>
@@ -135,7 +134,7 @@ export default function Index() {
               <View style={styles.cardTitle}>
                 <Text style={styles.cardTitleText}>Income</Text>
                 <TouchableOpacity
-                  onPress={() => router.push("/(screens)/IncomeScreen")}
+                  onPress={() => router.push("/(screens)/incomes")}
                   style={styles.cardTitleButton}
                 >
                   <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
@@ -156,7 +155,7 @@ export default function Index() {
               </View>
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() => router.push("/(screens)/AddIncomeScreen")}
+                onPress={() => router.push("/(screens)/incomes/AddIncomeScreen")}
               >
                 <Ionicons name="add-circle" size={16} color="#4A5DFF" />
                 <Text style={styles.actionButtonText}>Add New Income</Text>
@@ -167,7 +166,7 @@ export default function Index() {
               <View style={styles.cardTitle}>
                 <Text style={styles.cardTitleText}>Expense</Text>
                 <TouchableOpacity
-                  onPress={() => router.push("/(screens)/ExpenseScreen")}
+                  onPress={() => router.push("/(screens)/expenses")}
                   style={styles.cardTitleButton}
                 >
                   <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
@@ -188,7 +187,7 @@ export default function Index() {
               </View>
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() => router.push("/(screens)/AddExpenseScreen")}
+                onPress={() => router.push("/(screens)/expenses/AddExpenseScreen")}
               >
                 <Ionicons name="add-circle" size={16} color="#4A5DFF" />
                 <Text style={styles.actionButtonText}>Add New Expense</Text>
@@ -198,7 +197,7 @@ export default function Index() {
               <View style={styles.cardTitle}>
                 <Text style={styles.cardTitleText}>Debt</Text>
                 <TouchableOpacity
-                  onPress={() => router.push("/(screens)/DebtScreen")}
+                  onPress={() => router.push("/(screens)/debts")}
                   style={styles.cardTitleButton}
                 >
                   <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
@@ -219,7 +218,7 @@ export default function Index() {
               </View>
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() => router.push("/(screens)/AddDebtScreen")}
+                onPress={() => router.push("/(screens)/debts/AddDebtScreen")}
               >
                 <Ionicons name="add-circle" size={16} color="#4A5DFF" />
                 <Text style={styles.actionButtonText}>Add New Debt</Text>

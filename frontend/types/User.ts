@@ -5,5 +5,5 @@ export interface IUser {
   password: string;
   role: "Finance Tracker" | "Debt Repayer" | "Financial Expert" | "Investor" | "Administrator";
   assignedExpert?: string;
-  assignedClients?: string;
+  assignedClients?: string[];
 }

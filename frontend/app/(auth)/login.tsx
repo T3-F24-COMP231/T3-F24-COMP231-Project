@@ -32,7 +32,7 @@ const Login = () => {
       setLoading(true);
       await login(email, password);
       Alert.alert("Success", "Logged in successfully!");
-      router.push("/(tabs)");
+      router.replace("/(tabs)");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An error occurred.";
