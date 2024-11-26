@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import debtRoutes from './routes/debtRoutes';
 import categoryRoutes from './routes/categoryRoutes';
+import investmentRoutes from './routes/investmentRoutes';
 
 const app: Application = express();
 
@@ -25,7 +26,7 @@ app.use("/api", incomeRoutes);
 app.use("/api", userRoutes);
 app.use("/api", debtRoutes);
 app.use("/api", categoryRoutes);
-
+app.use("/api", investmentRoutes);
 
 
 
