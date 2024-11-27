@@ -5,4 +5,5 @@ export interface IDebt extends Document {
   title: string;
   amount: number;
   description: string;
+  date: Date;
 }

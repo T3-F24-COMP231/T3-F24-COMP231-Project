@@ -9,6 +9,8 @@ import debtRoutes from './routes/debtRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import investmentRoutes from './routes/investmentRoutes';
 import roleRoutes from './routes/roleRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import transactionRoutes from './routes/transactionRoutes';
 
 const app: Application = express();
 
@@ -29,6 +31,8 @@ app.use("/api", debtRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", investmentRoutes);
 app.use("/api", roleRoutes);
+app.use("/api", notificationRoutes);
+app.use("/api", transactionRoutes);
 
 
 
