@@ -1,6 +1,6 @@
 import React from "react";
 import { View, ViewProps, StyleProp, ViewStyle } from "react-native";
-import { getGlobalStyles } from "@/styles";
+import { getGlobalStyles } from "../../styles";
 import useTheme from "../../hooks/useThemeColor";
 
 interface CustomViewProps extends ViewProps {

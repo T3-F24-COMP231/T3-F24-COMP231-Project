@@ -1,4 +1,4 @@
-import { Category, Expense } from "../models";
+import { Category, Expense, Notification, Transaction } from "../models";
 import { ExpressHandler } from "../types";
 import { getStartOfMonth, getStartOfWeek, sendError, sendSuccess } from "../utils";
 
@@ -22,6 +22,24 @@ export const addExpense: ExpressHandler = async (req, res) => {
       amount,
       description,
       category: existingCategory.name,
+    });
+
+    // Log transaction
+    await Transaction.create({
+      userId,
+      type: "expense",
+      title,
+      amount,
+      description,
+      originalId: expense._id,
+    });
+
+    // Send notification
+    await Notification.create({
+      userId,
+      message: `New expense added: ${title} for $${amount}`,
+      type: "expense",
+      resourceId: expense._id,
     });
 
     sendSuccess(res, expense, "Expense successfully added");
@@ -52,6 +70,7 @@ export const getExpenses: ExpressHandler = async (req, res) => {
 export const updateExpense: ExpressHandler = async (req, res) => {
   try {
     const { id, userId } = req.params;
+
     const updatedExpense = await Expense.findOneAndUpdate(
       { _id: id, userId },
       req.body,
@@ -61,6 +80,24 @@ export const updateExpense: ExpressHandler = async (req, res) => {
     if (!updatedExpense) {
       return sendError(res, "Expense not found for this user", 404);
     }
+
+    // Update associated transaction
+    await Transaction.findOneAndUpdate(
+      { originalId: updatedExpense._id, userId },
+      {
+        title: updatedExpense.title,
+        amount: updatedExpense.amount,
+        description: updatedExpense.description,
+      }
+    );
+
+    // Send notification
+    await Notification.create({
+      userId,
+      message: `Expense updated: ${updatedExpense.title} with new amount $${updatedExpense.amount}`,
+      type: "expense",
+      resourceId: updatedExpense._id,
+    });
 
     sendSuccess(res, updatedExpense, "Expense successfully updated");
   } catch (error) {
@@ -73,6 +110,7 @@ export const updateExpense: ExpressHandler = async (req, res) => {
 export const deleteExpense: ExpressHandler = async (req, res) => {
   try {
     const { id, userId } = req.params;
+
     const deletedExpense = await Expense.findOneAndDelete({
       _id: id,
       userId,
@@ -81,6 +119,20 @@ export const deleteExpense: ExpressHandler = async (req, res) => {
     if (!deletedExpense) {
       return sendError(res, "Expense not found for this user", 404);
     }
+
+    // Mark transaction as deleted
+    await Transaction.findOneAndUpdate(
+      { originalId: deletedExpense._id, userId },
+      { deleted: true }
+    );
+
+    // Send notification
+    await Notification.create({
+      userId,
+      message: `Expense deleted: ${deletedExpense.title} for $${deletedExpense.amount}`,
+      type: "expense",
+      resourceId: deletedExpense._id,
+    });
 
     sendSuccess(res, deletedExpense, "Expense successfully deleted");
   } catch (error) {

@@ -2,7 +2,6 @@ export const formatNumber = (output: any) => {
     let outputString = output.toString();
     let decimal = outputString.split('.')[1];
     outputString = outputString.split('.')[0];
-  
     let suffix = '';
     if (outputString >= 1000000000) {
       suffix = 'B';

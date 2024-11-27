@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 import { FontSizes } from "./fontSize";
 import { Spacing } from "./spacing";
-import { Colors } from "@/components";
+import { Colors } from "@/constants";
 
 /*  For future reference, if we need to make the elements confirm to the device appearance, pass "theme" 
     to this method as parameter and pass the "theme" from the hook to it as argument in the component(functional)
@@ -68,14 +68,14 @@ export const getGlobalStyles = () =>
       marginVertical: Spacing.lg,
     },
     button: {
-      backgroundColor: Colors.light.blue,
+      backgroundColor: Colors.light.purple,
       paddingVertical: 12,
       paddingHorizontal: 20,
       borderRadius: 10,
       alignItems: "center",
     },
     buttonText: {
-      color: Colors.light.blue,
+      color: Colors.light.text,
       fontSize: 18,
       fontFamily: "SansSemiBold",
     },
