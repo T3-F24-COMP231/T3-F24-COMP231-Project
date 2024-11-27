@@ -42,7 +42,7 @@ const ROLES = {
     "manage:users",
     "view:transactions",
     "manage:transactions",
-    "view:all-reports",
+    "view:logs",
   ],
 } as const;
 
