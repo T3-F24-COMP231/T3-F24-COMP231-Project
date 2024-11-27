@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Text,
 } from "react-native";
 import {
   CustomBackground,
@@ -16,31 +17,20 @@ import {
   CustomModal,
 } from "@/components";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiRequest, hasPermission } from "@/utils";
-import { useAuth } from "@/hooks";
-
-interface Role {
-  _id: string;
-  name: string;
-  permissions: string[];
-}
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: Role | null;
-}
+import { apiRequest } from "@/utils";
+import { IRole, IUser } from "@/types";
+import { useTheme } from "@/hooks";
 
 export default function AdminRolesScreen() {
-  const { currentUser } = useAuth();
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const { theme } = useTheme();
+  const [roles, setRoles] = useState<IRole[]>([]);
+  const [users, setUsers] = useState<IUser[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<IUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [newRoleName, setNewRoleName] = useState<string>("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>("");
 
   const fetchRolesAndUsers = async () => {
     setLoading(true);
@@ -48,13 +38,14 @@ export default function AdminRolesScreen() {
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("Unauthorized");
 
-      const [usersData] = await Promise.all([
-        // apiRequest("/roles", "GET", undefined, token),
+      const [rolesData, usersData] = await Promise.all([
+        apiRequest("/roles", "GET", undefined, token),
         apiRequest("/users", "GET", undefined, token),
       ]);
 
-    //   setRoles(rolesData || []);
+      setRoles(rolesData || []);
       setUsers(usersData || []);
+      setFilteredUsers(usersData || []);
     } catch (error) {
       Alert.alert("Error", "Failed to fetch roles or users");
     } finally {
@@ -66,30 +57,29 @@ export default function AdminRolesScreen() {
     fetchRolesAndUsers();
   }, []);
 
-  const handleCreateRole = async () => {
-    try {
-      const token = await AsyncStorage.getItem("token");
-      if (!token) throw new Error("Unauthorized");
-
-      await apiRequest("/roles", "POST", { name: newRoleName }, token);
-      Alert.alert("Success", "Role created successfully");
-      setNewRoleName("");
-      fetchRolesAndUsers();
-    } catch (error) {
-      Alert.alert("Error", "Failed to create role");
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(query.toLowerCase()) ||
+          user.role.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredUsers(filtered);
     }
   };
 
   const handleAssignRole = async () => {
     try {
-      if (!selectedUser || !selectedRoleId) return;
+      if (!selectedUser || !selectedRole) return;
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("Unauthorized");
-
       await apiRequest(
-        `/users/${selectedUser._id}/role`,
-        "PUT",
-        { roleId: selectedRoleId },
+        `/users/${selectedUser._id}/upgrade-role`,
+        "POST",
+        { newRole: selectedRole },
         token
       );
 
@@ -101,9 +91,9 @@ export default function AdminRolesScreen() {
     }
   };
 
-  const openModal = (user: User) => {
+  const openModal = (user: IUser) => {
     setSelectedUser(user);
-    setSelectedRoleId(user.role?._id || "");
+    setSelectedRole(user.role);
     setModalVisible(true);
   };
 
@@ -117,38 +107,36 @@ export default function AdminRolesScreen() {
 
   return (
     <CustomBackground style={styles.container}>
-      
       <CustomHeader back title="Roles & Permissions" />
 
-      {/* Create Role */}
-      <View style={styles.createRoleContainer}>
-        <CustomInput
-          placeholder="Enter Role Name"
-          value={newRoleName}
-          onChangeText={setNewRoleName}
-          style={styles.input}
-        />
-        <CustomButton text="Create Role" onPress={handleCreateRole} />
-      </View>
+      {/* Search Input */}
+      <CustomInput
+        placeholder="Search users by name or role..."
+        value={searchQuery}
+        onChangeText={handleSearch}
+        style={styles.searchInput}
+      />
 
       {/* Users List */}
-      <CustomText style={styles.sectionTitle}>Users</CustomText>
       <FlatList
-        data={users}
+        data={filteredUsers}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.userContainer}
             onPress={() => openModal(item)}
           >
-            <CustomText>{item.name}</CustomText>
-            <CustomText style={styles.roleText}>
-              Role: {item.role?.name || "Unassigned"}
-            </CustomText>
+            <Text style={{fontSize: 20, fontWeight: "medium", color:"#fff"}}>{item.name}</Text>
+            <Text style={{color: theme.purple}}>
+              Role: {item.role || "Finance Tracker"}
+            </Text>
           </TouchableOpacity>
         )}
+        contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <CustomText style={styles.emptyMessage}>No users found</CustomText>
+          <CustomText style={styles.emptyMessage}>
+            No users found matching your search.
+          </CustomText>
         }
       />
 
@@ -157,22 +145,27 @@ export default function AdminRolesScreen() {
         <CustomModal
           isVisible={modalVisible}
           onClose={() => setModalVisible(false)}
-          title="Assign Role"
+          title={`Assign Role to ${selectedUser.name}`}
         >
-          <CustomText>Select a role for {selectedUser.name}</CustomText>
+          <CustomText style={styles.selectRoleText}>Select a role:</CustomText>
           <FlatList
             data={roles}
             keyExtractor={(item) => item._id}
+            contentContainerStyle={styles.listContent}
+            scrollEnabled={true}
+            bounces={true}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => setSelectedRoleId(item._id)}
-                style={[
-                  styles.roleOption,
-                  selectedRoleId === item._id && styles.selectedRoleOption,
-                ]}
-              >
-                <CustomText>{item.name}</CustomText>
-              </TouchableOpacity>
+              <View style={styles.renderedItem}>
+                <TouchableOpacity
+                  onPress={() => setSelectedRole(item.name)}
+                  style={[
+                    styles.roleOption,
+                    selectedRole === item.name && styles.selectedRoleOption,
+                  ]}
+                >
+                  <CustomText>{item.name}</CustomText>
+                </TouchableOpacity>
+              </View>
             )}
           />
           <CustomButton text="Assign Role" onPress={handleAssignRole} />
@@ -187,31 +180,34 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  createRoleContainer: {
+  listContent: {
+    paddingBottom: 70,
+  },
+  searchInput: {
     marginBottom: 20,
-  },
-  input: {
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
   },
   userContainer: {
     padding: 15,
+    rowGap: 8,
     marginBottom: 10,
     borderRadius: 10,
     backgroundColor: "#393E46",
   },
-  roleText: {
-    color: "#4A5DFF",
+  selectRoleText: {
+    width: "100%",
+    marginBottom: 20,
+    textAlign: "left",
   },
   emptyMessage: {
     textAlign: "center",
     marginTop: 20,
   },
+  renderedItem: {
+    minWidth: "100%",
+    marginBottom: 15,
+  },
   roleOption: {
+    width: "100%",
     padding: 10,
     borderWidth: 1,
     borderColor: "#ccc",

@@ -45,17 +45,17 @@ export default function Settings() {
       >
         {/* Header with caret left icon */}
         <CustomHeader title="Settings" />
-        <View style={{ height: "80%" }}>
+        <View style={styles.settingsContainer}>
           <View style={styles.avatarWrapper}>
             <Image
               source={require("../../assets/images/background-1.jpg")}
               alt="Profile Image"
               style={styles.avatar}
             />
-            <CustomText style={styles.title}>{currentUser?.name}</CustomText>
+            <CustomText style={styles.title}>{`${currentUser?.name} - ${currentUser?.role}`}</CustomText>
           </View>
           <View style={styles.section}>
-            {currentUser && !hasPermission(currentUser, "view:users") && (
+            {currentUser && hasPermission(currentUser, "view:users") && (
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => router.push("/(screens)/admin")}
@@ -65,7 +65,11 @@ export default function Settings() {
               </TouchableOpacity>
             )}
             <View
-              style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
             >
               <View>
                 <CustomText
@@ -112,6 +116,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
+  },
+  settingsContainer: { 
+    width: "100%", 
+    height: "80%", 
+    alignItems: "center" 
   },
   avatarWrapper: {
     alignItems: "center",

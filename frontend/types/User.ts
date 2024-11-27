@@ -1,9 +1,11 @@
+import { IRole } from "./Role";
+
 export interface IUser {
   _id: string;
   name: string;
   email: string;
   password: string;
-  role: "Finance Tracker" | "Debt Repayer" | "Financial Expert" | "Investor" | "Administrator";
+  role: string;
   assignedExpert?: string;
   assignedClients?: string[];
 }

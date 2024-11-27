@@ -8,9 +8,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { CustomBackground, CustomHeader, CustomText } from "@/components";
-import { useAuth } from "@/hooks";
+import { useAuth, useTheme } from "@/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiRequest } from "@/utils";
+import {
+  apiRequest,
+  fetchAllDebts,
+  fetchAllExpenses,
+  fetchAllIncomes,
+  fetchAllInvestments,
+} from "@/utils";
 
 interface Transaction {
   _id: string;
@@ -22,6 +28,7 @@ interface Transaction {
 }
 
 const TransactionScreen = () => {
+  const {theme} = useTheme();
   const { currentUser } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -35,30 +42,10 @@ const TransactionScreen = () => {
 
         const [incomeData, debtData, expenseData, investmentData] =
           await Promise.all([
-            apiRequest(
-              `/users/${currentUser._id}/incomes`,
-              "GET",
-              undefined,
-              token
-            ),
-            apiRequest(
-              `/users/${currentUser._id}/debts`,
-              "GET",
-              undefined,
-              token
-            ),
-            apiRequest(
-              `/users/${currentUser._id}/expenses`,
-              "GET",
-              undefined,
-              token
-            ),
-            apiRequest(
-              `/users/${currentUser._id}/investments`,
-              "GET",
-              undefined,
-              token
-            ),
+            fetchAllIncomes(currentUser._id, token),
+            fetchAllDebts(currentUser._id, token),
+            fetchAllExpenses(currentUser._id, token),
+            fetchAllInvestments(currentUser._id, token),
           ]);
 
         // Combine and label transactions
@@ -101,7 +88,7 @@ const TransactionScreen = () => {
   if (loading) {
     return (
       <CustomBackground style={styles.container}>
-        <ActivityIndicator size="large" color="#4a5dff" />
+        <ActivityIndicator size="large" color={theme.purple} />
       </CustomBackground>
     );
   }
@@ -150,6 +137,7 @@ const TransactionScreen = () => {
             </View>
           );
         }}
+        contentContainerStyle={styles.listContent}
         ListEmptyComponent={<CustomText>No transactions found.</CustomText>}
       />
     </CustomBackground>
@@ -162,6 +150,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  listContent: {
+    paddingBottom: 70,
   },
   itemContainer: {
     flexDirection: "column",

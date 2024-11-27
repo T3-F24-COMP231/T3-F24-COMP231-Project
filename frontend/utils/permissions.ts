@@ -1,7 +1,12 @@
 import { IUser } from "@/types";
 
 // Define roles and permissions
-type Role = keyof typeof ROLES;
+type Role = 
+  | "Finance Tracker"
+  | "Debt Repayer"
+  | "Financial Expert"
+  | "Investor"
+  | "Administrator";
 type Permission = (typeof ROLES)[Role][number];
 
 const ROLES = {
@@ -43,7 +48,7 @@ const ROLES = {
 
 // Function to check if the user has a specific permission
 export function hasPermission(user: IUser | null, permission: Permission): boolean {
-  if (!user) return false;
+  if (!user || !user.role) return false;
   const rolePermissions = ROLES[user.role as Role] as readonly Permission[];
   return rolePermissions.includes(permission);
 }

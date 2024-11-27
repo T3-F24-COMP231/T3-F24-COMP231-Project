@@ -15,6 +15,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiRequest, CleanOutput } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 
+type ValidRoutes =
+  | "/(screens)/incomes"
+  | "/(screens)/incomes/AddIncomeScreen"
+  | "/(screens)/expenses"
+  | "/(screens)/expenses/AddExpenseScreen"
+  | "/(screens)/debts"
+  | "/(screens)/debts/AddDebtScreen";
+
+interface ICardData {
+  title: string;
+  viewAllRoute: ValidRoutes;
+  addNewRoute: ValidRoutes;
+  getTotal: () => number;
+  buttonText: string;
+}
 export default function Index() {
   const { theme } = useTheme();
   const { currentUser, isLoading } = useAuth();
@@ -90,10 +105,34 @@ export default function Index() {
   if (isLoading || loading) {
     return (
       <CustomBackground style={styles.container}>
-        <ActivityIndicator size="large" color="#4a5dff" />
+        <ActivityIndicator size="large" color={theme.purple} />
       </CustomBackground>
     );
   }
+
+  const cardData: ICardData[] = [
+    {
+      title: "Income",
+      viewAllRoute: "/(screens)/incomes",
+      addNewRoute: "/(screens)/incomes/AddIncomeScreen",
+      getTotal: getTotalIncome,
+      buttonText: "Add New Income",
+    },
+    {
+      title: "Expense",
+      viewAllRoute: "/(screens)/expenses",
+      addNewRoute: "/(screens)/expenses/AddExpenseScreen",
+      getTotal: getTotalExpense,
+      buttonText: "Add New Expense",
+    },
+    {
+      title: "Debt",
+      viewAllRoute: "/(screens)/debts",
+      addNewRoute: "/(screens)/debts/AddDebtScreen",
+      getTotal: getTotalDebt,
+      buttonText: "Add New Debt",
+    },
+  ];
 
   return (
     <CustomBackground style={styles.container}>
@@ -120,7 +159,7 @@ export default function Index() {
           {/* Current Balance Section */}
           <View style={styles.balanceSection}>
             <CustomText style={styles.balanceLabel}>Current Balance</CustomText>
-            <Text style={styles.balanceAmount}>
+            <Text style={[styles.balanceAmount, { color: theme.purple }]}>
               $
               {CleanOutput(
                 getTotalIncome() - getTotalExpense() - getTotalDebt()
@@ -130,100 +169,40 @@ export default function Index() {
 
           {/* Income, Expense, and Debt Summary */}
           <View style={styles.summarySection}>
-            <View style={styles.card}>
-              <View style={styles.cardTitle}>
-                <Text style={styles.cardTitleText}>Income</Text>
+            {cardData.map((card, index) => (
+              <View key={index} style={styles.card}>
+                <View style={styles.cardTitle}>
+                  <Text style={styles.cardTitleText}>{card.title}</Text>
+                  <TouchableOpacity
+                    onPress={() => router.push(card.viewAllRoute)}
+                    style={styles.cardTitleButton}
+                  >
+                    <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
+                    <Ionicons name="arrow-forward" size={16} color="#4A5DFF" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.cardContent}>
+                  <View style={styles.currency}>
+                    <Text style={styles.currencyText}>$</Text>
+                  </View>
+                  <View style={styles.cardTotalView}>
+                    <Text style={styles.cardTotalText}>Today's Total</Text>
+                    <Text style={styles.cardAmount}>
+                      {CleanOutput(card.getTotal())}
+                    </Text>
+                  </View>
+                </View>
+
                 <TouchableOpacity
-                  onPress={() => router.push("/(screens)/incomes")}
-                  style={styles.cardTitleButton}
+                  style={styles.actionButton}
+                  onPress={() => router.push(card.addNewRoute)}
                 >
-                  <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
-                  <Ionicons name="arrow-forward" size={16} color="#4A5DFF" />
+                  <Ionicons name="add-circle" size={16} color="#4A5DFF" />
+                  <Text style={styles.actionButtonText}>{card.buttonText}</Text>
                 </TouchableOpacity>
               </View>
-
-              <View style={styles.cardContent}>
-                <View style={styles.currency}>
-                  <Text style={styles.currencyText}>$</Text>
-                </View>
-                <View style={styles.cardTotalView}>
-                  <Text style={styles.cardTotalText}>Today's Total</Text>
-                  <Text style={styles.cardAmount}>
-                    {CleanOutput(getTotalIncome())}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => router.push("/(screens)/incomes/AddIncomeScreen")}
-              >
-                <Ionicons name="add-circle" size={16} color="#4A5DFF" />
-                <Text style={styles.actionButtonText}>Add New Income</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.card}>
-              <View style={styles.cardTitle}>
-                <Text style={styles.cardTitleText}>Expense</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/(screens)/expenses")}
-                  style={styles.cardTitleButton}
-                >
-                  <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
-                  <Ionicons name="arrow-forward" size={16} color="#4A5DFF" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.cardContent}>
-                <View style={styles.currency}>
-                  <Text style={styles.currencyText}>$</Text>
-                </View>
-                <View style={styles.cardTotalView}>
-                  <Text style={styles.cardTotalText}>Today's Total</Text>
-                  <Text style={styles.cardAmount}>
-                    {CleanOutput(getTotalExpense())}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => router.push("/(screens)/expenses/AddExpenseScreen")}
-              >
-                <Ionicons name="add-circle" size={16} color="#4A5DFF" />
-                <Text style={styles.actionButtonText}>Add New Expense</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.card}>
-              <View style={styles.cardTitle}>
-                <Text style={styles.cardTitleText}>Debt</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/(screens)/debts")}
-                  style={styles.cardTitleButton}
-                >
-                  <Text style={styles.cardTitleButtonText}>VIEW ALL </Text>
-                  <Ionicons name="arrow-forward" size={16} color="#4A5DFF" />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.cardContent}>
-                <View style={styles.currency}>
-                  <Text style={styles.currencyText}>$</Text>
-                </View>
-                <View style={styles.cardTotalView}>
-                  <Text style={styles.cardTotalText}>Today's Total</Text>
-                  <Text style={styles.cardAmount}>
-                    {CleanOutput(getTotalDebt())}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => router.push("/(screens)/debts/AddDebtScreen")}
-              >
-                <Ionicons name="add-circle" size={16} color="#4A5DFF" />
-                <Text style={styles.actionButtonText}>Add New Debt</Text>
-              </TouchableOpacity>
-            </View>
+            ))}
           </View>
         </ScrollView>
       ) : null}
@@ -274,7 +253,6 @@ const styles = StyleSheet.create({
   balanceAmount: {
     fontSize: 30,
     fontWeight: "800",
-    color: "#4A5DFF",
   },
   summarySection: {
     width: "100%",
@@ -325,6 +303,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 20,
     columnGap: 20,
+  },
+  iconWrapper: {
+    height: 15,
+    width: 15,
+    borderRadius: 100,
+    borderWidth: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
   },
   currency: {
     height: 50,

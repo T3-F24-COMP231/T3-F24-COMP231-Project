@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Appearance, ColorSchemeName } from "react-native";
 import { Theme } from "../types";
-import { Colors } from "../components/constants";
+import { Colors } from "../constants";
 
 type ThemeContextType = {
   theme: Theme;

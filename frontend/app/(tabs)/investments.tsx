@@ -4,8 +4,8 @@ import {
   FlatList,
   View,
   ActivityIndicator,
-  TouchableOpacity,
   Text,
+  TouchableOpacity,
 } from "react-native";
 import {
   CustomBackground,
@@ -13,14 +13,12 @@ import {
   CustomButton,
   CustomHeader,
   CustomInput,
-  KeyboardLayout,
 } from "@/components";
 import { useAuth } from "@/hooks";
-import { apiRequest, CleanOutput, fetchAllInvestments, hasPermission } from "@/utils";
+import { fetchAllInvestments, formatNumber } from "@/utils";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IInvestment } from "@/types";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function Investment() {
   const { currentUser } = useAuth();
@@ -36,7 +34,7 @@ export default function Investment() {
     try {
       const token = await AsyncStorage.getItem("token");
       if (currentUser?._id && token) {
-        const data = await fetchAllInvestments(currentUser._id,token);
+        const data = await fetchAllInvestments(currentUser._id, token);
         setInvestments(data || []);
         calculateTotals(data || []);
       }
@@ -73,6 +71,72 @@ export default function Investment() {
     }
   };
 
+  const renderInvestment = ({ item }: { item: IInvestment }) => (
+    <View style={styles.investmentDetails}>
+      <Text style={[styles.investmentText, styles.investmentTitle]}>
+        {item.title}
+      </Text>
+      <Text style={styles.investmentText}>
+        Amount: ${item.amount.toFixed(2)}
+      </Text>
+      <Text style={styles.investmentText}>
+        Return: {item.returnPercentage}%
+      </Text>
+      <Text style={styles.investmentText}>
+        Date:{" "}
+        {new Date(item.date).toLocaleDateString() +
+          " " +
+          new Date(item.date).toLocaleTimeString()}
+      </Text>
+    </View>
+  );
+
+  const renderHeader = () => (
+    <View>
+      <View style={styles.summaryContainer}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryTitle}>My Portfolio</Text>
+          <Text style={styles.summaryValue}>
+            ${formatNumber(totalInvestment)}
+          </Text>
+        </View>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryTitle}>My Returns</Text>
+          <Text style={styles.summaryValue}>${formatNumber(totalReturns)}</Text>
+        </View>
+      </View>
+
+      {/* Search Bar */}
+      <CustomInput
+        placeholder="Search investments..."
+        value={searchQuery}
+        onChangeText={handleSearch}
+        style={styles.searchBar}
+      />
+    </View>
+  );
+
+  const renderFooter = () => (
+    <View style={styles.operationButtonsView}>
+      <CustomButton
+        text="Add New Investment"
+        onPress={() =>
+          router.push("/(screens)/investments/AddInvestmentScreen")
+        }
+        style={styles.operationButton}
+      />
+      <TouchableOpacity
+        onPress={() => router.push("/(screens)/investments")}
+        style={[
+          styles.operationButton,
+          { borderWidth: 1, borderColor: "gray" },
+        ]}
+      >
+        <Text style={styles.investmentText}>View all investments</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (loading) {
     return (
       <CustomBackground style={styles.container}>
@@ -82,104 +146,36 @@ export default function Investment() {
   }
 
   return (
-    <KeyboardLayout>
-      <CustomBackground>
-        {currentUser && !hasPermission(currentUser, "view:investments") ? (
-          <>
-            <CustomHeader title="Investment Overview" />
-            <View style={styles.wrapper}>
-              <View style={styles.summaryContainer}>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryTitle}>My Portfolio</Text>
-                  <Text style={styles.summaryValue}>
-                    ${CleanOutput(totalInvestment.toFixed(2))}
-                  </Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryTitle}>My Returns</Text>
-                  <Text style={styles.summaryValue}>
-                    ${CleanOutput(totalReturns.toFixed(2))}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Search Bar */}
-              <CustomInput
-                placeholder="Search investments..."
-                value={searchQuery}
-                onChangeText={handleSearch}
-                style={styles.searchBar}
-              />
-
-              {/* Investment List */}
-              <FlatList
-                data={investments.slice(0, 4)}
-                keyExtractor={(item) => item._id}
-                renderItem={({ item }) => (
-                  <View style={styles.investmentDetails}>
-                    <Text
-                      style={[styles.investmentText, styles.investmentTitle]}
-                    >
-                      {item.title}
-                    </Text>
-                    <Text style={styles.investmentText}>
-                      Amount: ${item.amount.toFixed(2)}
-                    </Text>
-                    <Text style={styles.investmentText}>
-                      Return: {item.returnPercentage}%
-                    </Text>
-                    <Text style={styles.investmentText}>
-                      Date:{" "}
-                      {new Date(item.date).toLocaleDateString() +
-                        " " +
-                        new Date(item.date).toLocaleTimeString()}
-                    </Text>
-                  </View>
-                )}
-                ListEmptyComponent={
-                  <CustomText>No investments found.</CustomText>
-                }
-              />
-
-              {/* Operation Buttons */}
-              <View style={styles.operationButtonsView}>
-                <CustomButton
-                  text="Add New Investment"
-                  onPress={() =>
-                    router.push("/(screens)/investments/AddInvestmentScreen")
-                  }
-                  style={styles.operationButton}
-                />
-                <TouchableOpacity
-                  onPress={() => router.push("/(screens)/investments")}
-                  style={[
-                    styles.operationButton,
-                    { borderWidth: 1, borderColor: "gray" },
-                  ]}
-                >
-                  <Text style={styles.investmentText}>
-                    View all investments{" "}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </>
-        ) : (
-          <CustomText>Investment page not available</CustomText>
-        )}
-      </CustomBackground>
-    </KeyboardLayout>
+    <CustomBackground style={styles.container}>
+      <CustomHeader
+        title={`Investment Overview - (${investments.length} Investment${
+          investments.length === 1 ? "" : "s"
+        })`}
+      />
+      <FlatList
+        data={investments}
+        keyExtractor={(item) => item._id}
+        renderItem={renderInvestment}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={
+          <CustomText style={styles.emptyMessage}>
+            No investments found.
+          </CustomText>
+        }
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+      />
+    </CustomBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
   },
-  wrapper: {
-    height: "90%",
-    justifyContent: "space-between",
+  listContent: {
+    paddingBottom: 70,
   },
   summaryContainer: {
     flexDirection: "row",
@@ -187,7 +183,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   summaryItem: {
-    width: "49%",
+    width: "48%",
     backgroundColor: "#2D3436",
     borderRadius: 10,
     padding: 16,
@@ -213,8 +209,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#393E46",
     padding: 10,
     borderRadius: 10,
-    color: "#fff",
-    rowGap: 10,
     marginBottom: 10,
   },
   investmentText: {
@@ -228,7 +222,6 @@ const styles = StyleSheet.create({
   },
   operationButtonsView: {
     flexDirection: "row",
-    width: "100%",
     alignItems: "center",
     justifyContent: "space-between",
   },
@@ -238,5 +231,11 @@ const styles = StyleSheet.create({
     height: 50,
     alignItems: "center",
     justifyContent: "center",
+  },
+  emptyMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#9BA4B4",
+    marginTop: 20,
   },
 });
