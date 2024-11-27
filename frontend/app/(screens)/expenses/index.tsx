@@ -15,6 +15,8 @@ import {
   CustomInput,
   CustomButton,
   CustomModal,
+  CustomHeader,
+  CustomListEmpty,
 } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import { IExpense } from "@/types";
@@ -38,28 +40,28 @@ export default function ExpensesScreen() {
   const [description, setDescription] = useState<string>("");
   const [category, setCategory] = useState<string>("");
 
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (currentUser?._id && token) {
-          const data = await apiRequest(
-            `/users/${currentUser._id}/expenses`,
-            "GET",
-            undefined,
-            token
-          );
-          setExpenses(data || []);
-          setFilteredExpenses(data || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch expenses:", error);
-      } finally {
-        setLoading(false);
+  const fetchExpenses = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (currentUser?._id && token) {
+        const data = await apiRequest(
+          `/users/${currentUser._id}/expenses`,
+          "GET",
+          undefined,
+          token
+        );
+        setExpenses(data || []);
+        setFilteredExpenses(data || []);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch expenses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchExpenses();
   }, [currentUser]);
 
@@ -159,11 +161,12 @@ export default function ExpensesScreen() {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#d63031" />;
+    return <ActivityIndicator size="large" color={theme.red} />;
   }
 
   return (
     <CustomBackground style={styles.container}>
+      <CustomHeader title="All Expenses" />
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <CustomInput
@@ -173,7 +176,9 @@ export default function ExpensesScreen() {
           style={styles.searchBar}
         />
         <TouchableOpacity onPress={toggleSelectionMode} style={styles.selectButton}>
-          <Text style={[styles.selectButtonText, {color: "#4A5DFF"}]}>Select</Text>
+          <Text style={[styles.selectButtonText, { color: theme.purple }]}>
+            Select
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -183,26 +188,37 @@ export default function ExpensesScreen() {
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => openModal(item)}>
-            <CustomView style={styles.item}>
-            {isSelectionMode && (
+            <CustomView style={[styles.item, { backgroundColor: theme.lightGray }]}>
+              {isSelectionMode && (
                 <Checkbox
                   value={selectedIds.includes(item._id)}
                   onValueChange={(isChecked) =>
                     handleSelectExpense(item._id, isChecked)
                   }
-                  color="#4A5DFF"
+                  color={theme.purple}
                 />
               )}
-              <View style={{ marginLeft: 20 }}>
+              <View style={styles.itemContent}>
                 <CustomText style={styles.title}>{item.title}</CustomText>
                 <CustomText>Amount: ${item.amount}</CustomText>
                 <CustomText>Category: {item.category}</CustomText>
                 <CustomText>Description: {item.description}</CustomText>
+                <CustomText style={styles.timestamp}>
+                  Time:{" "}
+                  {new Date(item.date).toLocaleDateString() +
+                    " " +
+                    new Date(item.date).toLocaleTimeString()}
+                </CustomText>
               </View>
             </CustomView>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<CustomText>No expenses found.</CustomText>}
+        ListEmptyComponent={
+          <CustomListEmpty
+            message="No Expenses Found"
+            onRetry={() => fetchExpenses()}
+          />
+        }
       />
 
       {isSelectionMode && (
@@ -217,9 +233,22 @@ export default function ExpensesScreen() {
           title="Update Expense"
         >
           <CustomInput placeholder="Title" value={title} onChangeText={setTitle} />
-          <CustomInput placeholder="Amount" value={amount} onChangeText={setAmount} keyboardType="numeric" />
-          <CustomInput placeholder="Description" value={description} onChangeText={setDescription} />
-          <CustomInput placeholder="Category" value={category} onChangeText={setCategory} />
+          <CustomInput
+            placeholder="Amount"
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+          />
+          <CustomInput
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+          />
+          <CustomInput
+            placeholder="Category"
+            value={category}
+            onChangeText={setCategory}
+          />
           <CustomButton text="Update Expense" onPress={handleUpdateExpense} />
         </CustomModal>
       )}
@@ -236,34 +265,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginVertical: 40,
+    marginVertical: 20,
     height: 50,
   },
   searchBar: {
     width: "75%",
     height: "100%",
-    alignItems: "center",
   },
   selectButton: {
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
     width: "20%",
+    marginBottom: 16,
   },
   selectButtonText: {
     fontSize: 18,
+    fontWeight: "bold",
   },
   item: {
     padding: 15,
     marginBottom: 10,
     borderRadius: 10,
-    backgroundColor: "#d63031",
     flexDirection: "row",
     alignItems: "center",
   },
+  itemContent: {
+    marginLeft: 20,
+  },
   title: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#ffffff",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 5,
   },
 });

@@ -21,7 +21,9 @@ type ValidRoutes =
   | "/(screens)/expenses"
   | "/(screens)/expenses/AddExpenseScreen"
   | "/(screens)/debts"
-  | "/(screens)/debts/AddDebtScreen";
+  | "/(screens)/debts/AddDebtScreen"
+  | "/(screens)/savings"
+  | "/(screens)/savings/AddSavingsScreen";
 
 interface ICardData {
   title: string;
@@ -39,7 +41,6 @@ export default function Index() {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  // Redirect if user is not logged in and not loading
   useEffect(() => {
     if (!currentUser && !isLoading) {
       router.replace("/(auth)/login");
@@ -131,6 +132,13 @@ export default function Index() {
       addNewRoute: "/(screens)/debts/AddDebtScreen",
       getTotal: getTotalDebt,
       buttonText: "Add New Debt",
+    },
+    {
+      title: "Savings",
+      viewAllRoute: "/(screens)/savings",
+      addNewRoute: "/(screens)/savings/AddSavingsScreen",
+      getTotal: () => 0,
+      buttonText: "Add New Savings",
     },
   ];
 

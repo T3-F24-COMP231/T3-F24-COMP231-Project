@@ -7,81 +7,45 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
-import { CustomBackground, CustomHeader, CustomText } from "@/components";
+import {
+  CustomBackground,
+  CustomHeader,
+  CustomListEmpty,
+  CustomText,
+} from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  apiRequest,
-  fetchAllDebts,
-  fetchAllExpenses,
-  fetchAllIncomes,
-  fetchAllInvestments,
-} from "@/utils";
-
-interface Transaction {
-  _id: string;
-  title: string;
-  amount: number;
-  description: string;
-  type: "income" | "debt" | "expense" | "investment";
-  createdAt: string;
-}
+import { apiRequest } from "@/utils";
+import { ITransaction } from "@/types";
 
 const TransactionScreen = () => {
-  const {theme} = useTheme();
+  const { theme } = useTheme();
   const { currentUser } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!currentUser?._id || !token) return;
+
+      const response = await apiRequest(
+        `/users/${currentUser._id}/transactions`,
+        "GET",
+        undefined,
+        token
+      );
+
+      setTransactions(response || []);
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTransactions = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (!currentUser?._id || !token) return;
-
-        const [incomeData, debtData, expenseData, investmentData] =
-          await Promise.all([
-            fetchAllIncomes(currentUser._id, token),
-            fetchAllDebts(currentUser._id, token),
-            fetchAllExpenses(currentUser._id, token),
-            fetchAllInvestments(currentUser._id, token),
-          ]);
-
-        // Combine and label transactions
-        const formattedTransactions: Transaction[] = [
-          ...(incomeData || []).map((item: any) => ({
-            ...item,
-            type: "income",
-          })),
-          ...(debtData || []).map((item: any) => ({
-            ...item,
-            type: "debt",
-          })),
-          ...(expenseData || []).map((item: any) => ({
-            ...item,
-            type: "expense",
-          })),
-          ...(investmentData || []).map((item: any) => ({
-            ...item,
-            type: "investment",
-          })),
-        ];
-
-        // Sort transactions by date (most recent first)
-        formattedTransactions.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        setTransactions(formattedTransactions);
-      } catch (error) {
-        console.error("Failed to fetch transactions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTransactions();
   }, [currentUser]);
 
@@ -112,9 +76,6 @@ const TransactionScreen = () => {
 
           return (
             <View style={styles.itemContainer}>
-              <TouchableOpacity style={styles.moreButton}>
-                <Text style={styles.moreButtonText}>...</Text>
-              </TouchableOpacity>
               <View style={styles.item}>
                 <View>
                   <CustomText style={styles.title}>{item.title}</CustomText>
@@ -138,7 +99,12 @@ const TransactionScreen = () => {
           );
         }}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={<CustomText>No transactions found.</CustomText>}
+        ListEmptyComponent={
+          <CustomListEmpty
+            message="No transactions found"
+            onRetry={() => fetchTransactions()}
+          />
+        }
       />
     </CustomBackground>
   );

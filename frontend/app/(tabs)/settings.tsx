@@ -35,74 +35,65 @@ export default function Settings() {
 
   return (
     <CustomBackground>
-      <View
-        style={{
-          width: "100%",
-          height: "100%",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Header with caret left icon */}
-        <CustomHeader title="Settings" />
-        <View style={styles.settingsContainer}>
-          <View style={styles.avatarWrapper}>
-            <Image
-              source={require("../../assets/images/background-1.jpg")}
-              alt="Profile Image"
-              style={styles.avatar}
-            />
-            <CustomText style={styles.title}>{`${currentUser?.name} - ${currentUser?.role}`}</CustomText>
-          </View>
-          <View style={styles.section}>
-            {currentUser && hasPermission(currentUser, "view:users") && (
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => router.push("/(screens)/admin")}
-              >
-                <CustomText>Manage Users and Roles</CustomText>
-                <Ionicons name="chevron-forward" size={24} color={theme.text} />
-              </TouchableOpacity>
-            )}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+      {/* Header with caret left icon */}
+      <CustomHeader title="Settings" />
+      <View style={styles.settingsContainer}>
+        <View style={styles.avatarWrapper}>
+          <Image
+            source={require("../../assets/images/background-1.jpg")}
+            alt="Profile Image"
+            style={styles.avatar}
+          />
+          <CustomText
+            style={styles.title}
+          >{`${currentUser?.name} - ${currentUser?.role}`}</CustomText>
+        </View>
+        <View style={styles.section}>
+          {currentUser && hasPermission(currentUser, "view:users") && (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.push("/(screens)/admin")}
             >
-              <View>
-                <CustomText
-                  style={[styles.sectionTitle, { color: theme.text }]}
-                >
-                  Appearance
-                </CustomText>
-                <CustomText
-                  style={[styles.sectionDescription, { color: theme.text }]}
-                >
-                  {isDarkMode ? "Dark mode is on" : "Light mode is on"}
-                </CustomText>
-              </View>
-
-              <Switch
-                value={isDarkMode}
-                onValueChange={toggleMode}
-                thumbColor={isDarkMode ? "#4a5dff" : "#f0f0f0"}
-                trackColor={{ false: "#4a5dff", true: "#fff" }}
-              />
+              <CustomText>Manage Users and Roles</CustomText>
+              <Ionicons name="chevron-forward" size={24} color={theme.text} />
+            </TouchableOpacity>
+          )}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <View>
+              <CustomText style={[styles.sectionTitle, { color: theme.text }]}>
+                Appearance
+              </CustomText>
+              <CustomText
+                style={[styles.sectionDescription, { color: theme.text }]}
+              >
+                {isDarkMode ? "Dark mode is on" : "Light mode is on"}
+              </CustomText>
             </View>
+
+            <Switch
+              value={isDarkMode}
+              onValueChange={toggleMode}
+              thumbColor={isDarkMode ? "#4a5dff" : "#f0f0f0"}
+              trackColor={{ false: "#4a5dff", true: "#fff" }}
+            />
           </View>
         </View>
-        {/* Appearance Section */}
-
-        {/* Logout Button */}
-        <CustomButton
-          text="Sign Out"
-          onPress={handleLogout}
-          buttonStyle={[styles.logoutButton, { backgroundColor: "#ff3b30" }]}
-          textStyle={styles.logoutText}
-        />
       </View>
+      {/* Appearance Section */}
+
+      {/* Logout Button */}
+      <CustomButton
+        text="Sign Out"
+        onPress={handleLogout}
+        buttonStyle={[styles.logoutButton, { backgroundColor: "#ff3b30" }]}
+        textStyle={styles.logoutText}
+      />
     </CustomBackground>
   );
 }
@@ -117,10 +108,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  settingsContainer: { 
-    width: "100%", 
-    height: "80%", 
-    alignItems: "center" 
+  settingsContainer: {
+    width: "100%",
+    height: "80%",
+    alignItems: "center",
   },
   avatarWrapper: {
     alignItems: "center",
