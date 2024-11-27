@@ -3,3 +3,7 @@ export * from "./expenseController";
 export * from "./incomeController";
 export * from "./debtController";
 export * from "./userController";
+export * from "./investmentController";
+export * from "./roleController";
+export * from "./notificationController";
+export * from "./transactionController";

@@ -15,6 +15,8 @@ import {
   CustomInput,
   CustomButton,
   CustomModal,
+  CustomHeader,
+  CustomListEmpty,
 } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import { IIncome } from "@/types";
@@ -23,6 +25,7 @@ import { apiRequest } from "@/utils";
 import Checkbox from "expo-checkbox";
 
 export default function IncomesScreen() {
+  const { theme } = useTheme();
   const { currentUser } = useAuth();
   const [incomes, setIncomes] = useState<IIncome[]>([]);
   const [filteredIncomes, setFilteredIncomes] = useState<IIncome[]>([]);
@@ -36,28 +39,28 @@ export default function IncomesScreen() {
   const [amount, setAmount] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
-  useEffect(() => {
-    const fetchIncomes = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (currentUser?._id && token) {
-          const data = await apiRequest(
-            `/users/${currentUser._id}/incomes`,
-            "GET",
-            undefined,
-            token
-          );
-          setIncomes(data || []);
-          setFilteredIncomes(data || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch incomes:", error);
-      } finally {
-        setLoading(false);
+  const fetchIncomes = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (currentUser?._id && token) {
+        const data = await apiRequest(
+          `/users/${currentUser._id}/incomes`,
+          "GET",
+          undefined,
+          token
+        );
+        setIncomes(data || []);
+        setFilteredIncomes(data || []);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch incomes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchIncomes();
   }, [currentUser]);
 
@@ -156,12 +159,12 @@ export default function IncomesScreen() {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#4a5dff" />;
+    return <ActivityIndicator size="large" color={theme.purple} />;
   }
 
   return (
     <CustomBackground style={styles.container}>
-      {/* Search Bar */}
+      <CustomHeader title="All Incomes" />
       <View style={styles.searchContainer}>
         <CustomInput
           placeholder="Search incomes..."
@@ -169,8 +172,13 @@ export default function IncomesScreen() {
           onChangeText={handleSearch}
           style={styles.searchBar}
         />
-        <TouchableOpacity onPress={toggleSelectionMode} style={styles.selectButton}>
-          <Text style={[styles.selectButtonText, {color: "#4A5DFF"}]}>Select</Text>
+        <TouchableOpacity
+          onPress={toggleSelectionMode}
+          style={styles.selectButton}
+        >
+          <Text style={[styles.selectButtonText, { color: theme.purple }]}>
+            Select
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -180,25 +188,36 @@ export default function IncomesScreen() {
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => openModal(item)}>
-            <CustomView style={styles.item}>
+            <CustomView style={[styles.item, { backgroundColor: theme.lightGray }]}>
               {isSelectionMode && (
                 <Checkbox
                   value={selectedIds.includes(item._id)}
                   onValueChange={(isChecked) =>
                     handleSelectIncome(item._id, isChecked)
                   }
-                  color="#4A5DFF"
+                  color={theme.purple}
                 />
               )}
-              <View style={{ marginLeft: 20 }}>
+              <View style={styles.itemContent}>
                 <CustomText style={styles.title}>{item.title}</CustomText>
                 <CustomText>Amount: ${item.amount}</CustomText>
                 <CustomText>Description: {item.description}</CustomText>
+                <CustomText style={styles.timestamp}>
+                  Time:{" "}
+                  {new Date(item.date).toLocaleDateString() +
+                    " " +
+                    new Date(item.date).toLocaleTimeString()}
+                </CustomText>
               </View>
             </CustomView>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<CustomText>No incomes found.</CustomText>}
+        ListEmptyComponent={
+          <CustomListEmpty
+            message="No Incomes Found"
+            onRetry={() => fetchIncomes()}
+          />
+        }
       />
 
       {isSelectionMode && (
@@ -244,7 +263,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginVertical: 40,
+    marginVertical: 20,
     height: 50,
   },
   searchBar: {
@@ -257,21 +276,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: "20%",
+    marginBottom: 16,
   },
   selectButtonText: {
     fontSize: 18,
+    fontWeight: "bold",
   },
   item: {
     padding: 15,
     marginBottom: 10,
     borderRadius: 10,
-    backgroundColor: "#2d3436",
     flexDirection: "row",
     alignItems: "center",
+  },
+  itemContent: {
+    marginLeft: 20,
+    flex: 1,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#ffffff",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 5,
   },
 });
