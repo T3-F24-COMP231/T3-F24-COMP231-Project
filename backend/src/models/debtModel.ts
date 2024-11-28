@@ -7,6 +7,7 @@ const debtSchema: Schema = new Schema(
     title: { type: String, required: true },
     amount: { type: Number, required: true },
     description: { type: String },
+    date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

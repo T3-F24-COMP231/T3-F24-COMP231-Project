@@ -15,6 +15,8 @@ import {
   CustomInput,
   CustomButton,
   CustomModal,
+  CustomHeader,
+  CustomListEmpty,
 } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import { IDebt } from "@/types";
@@ -37,28 +39,28 @@ export default function DebtsScreen() {
   const [amount, setAmount] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
-  useEffect(() => {
-    const fetchDebts = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (currentUser?._id && token) {
-          const data = await apiRequest(
-            `/users/${currentUser._id}/debts`,
-            "GET",
-            undefined,
-            token
-          );
-          setDebts(data || []);
-          setFilteredDebts(data || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch debts:", error);
-      } finally {
-        setLoading(false);
+  const fetchDebts = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (currentUser?._id && token) {
+        const data = await apiRequest(
+          `/users/${currentUser._id}/debts`,
+          "GET",
+          undefined,
+          token
+        );
+        setDebts(data || []);
+        setFilteredDebts(data || []);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch debts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDebts();
   }, [currentUser]);
 
@@ -157,12 +159,12 @@ export default function DebtsScreen() {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#ff6347" />;
+    return <ActivityIndicator size="large" color={theme.purple} />;
   }
 
   return (
     <CustomBackground style={styles.container}>
-      {/* Search Bar */}
+      <CustomHeader title="All Debts" />
       <View style={styles.searchContainer}>
         <CustomInput
           placeholder="Search debts..."
@@ -170,8 +172,13 @@ export default function DebtsScreen() {
           onChangeText={handleSearch}
           style={styles.searchBar}
         />
-        <TouchableOpacity onPress={toggleSelectionMode} style={styles.selectButton}>
-          <Text style={[styles.selectButtonText, {color: "#4A5DFF"}]}>Select</Text>
+        <TouchableOpacity
+          onPress={toggleSelectionMode}
+          style={styles.selectButton}
+        >
+          <Text style={[styles.selectButtonText, { color: theme.purple }]}>
+            Select
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -181,25 +188,38 @@ export default function DebtsScreen() {
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => openModal(item)}>
-            <CustomView style={styles.item}>
+            <CustomView
+              style={[styles.item, { backgroundColor: theme.lightGray }]}
+            >
               {isSelectionMode && (
                 <Checkbox
                   value={selectedIds.includes(item._id)}
                   onValueChange={(isChecked) =>
                     handleSelectDebt(item._id, isChecked)
                   }
-                  color="#4A5DFF"
+                  color={theme.purple}
                 />
               )}
-              <View style={{ marginLeft: 20 }}>
+              <View style={styles.itemContent}>
                 <CustomText style={styles.title}>{item.title}</CustomText>
                 <CustomText>Amount: ${item.amount}</CustomText>
                 <CustomText>Description: {item.description}</CustomText>
+                <CustomText style={styles.timestamp}>
+                  Time:{" "}
+                  {new Date(item.date).toLocaleDateString() +
+                    " " +
+                    new Date(item.date).toLocaleTimeString()}
+                </CustomText>
               </View>
             </CustomView>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<CustomText>No debts found.</CustomText>}
+        ListEmptyComponent={
+          <CustomListEmpty
+            message="No Debts Found"
+            onRetry={() => fetchDebts()}
+          />
+        }
       />
 
       {isSelectionMode && (
@@ -213,9 +233,22 @@ export default function DebtsScreen() {
           onClose={() => setIsModalVisible(false)}
           title="Update Debt"
         >
-          <CustomInput placeholder="Title" value={title} onChangeText={setTitle} />
-          <CustomInput placeholder="Amount" value={amount} onChangeText={setAmount} keyboardType="numeric" />
-          <CustomInput placeholder="Description" value={description} onChangeText={setDescription} />
+          <CustomInput
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+          />
+          <CustomInput
+            placeholder="Amount"
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+          />
+          <CustomInput
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+          />
           <CustomButton text="Update Debt" onPress={handleUpdateDebt} />
         </CustomModal>
       )}
@@ -232,34 +265,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginVertical: 40,
+    marginVertical: 20,
     height: 50,
   },
   searchBar: {
     width: "75%",
     height: "100%",
-    alignItems: "center",
   },
   selectButton: {
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
     width: "20%",
+    marginBottom: 16,
   },
   selectButtonText: {
     fontSize: 18,
+    fontWeight: "bold",
   },
   item: {
     padding: 15,
     marginBottom: 10,
     borderRadius: 10,
-    backgroundColor: "#ff6347",
     flexDirection: "row",
     alignItems: "center",
+  },
+  itemContent: {
+    marginLeft: 20,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#ffffff",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#ffffff",
+    marginTop: 5,
   },
 });

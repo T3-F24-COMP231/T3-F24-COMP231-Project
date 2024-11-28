@@ -7,102 +7,59 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
-import { CustomBackground, CustomText } from "@/components";
-import { useAuth } from "@/hooks";
+import {
+  CustomBackground,
+  CustomHeader,
+  CustomListEmpty,
+  CustomText,
+} from "@/components";
+import { useAuth, useTheme } from "@/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiRequest } from "@/utils";
-
-interface Transaction {
-  _id: string;
-  title: string;
-  amount: number;
-  description: string;
-  type: "income" | "debt" | "expense";
-  createdAt: string;
-}
+import { ITransaction } from "@/types";
 
 const TransactionScreen = () => {
+  const { theme } = useTheme();
   const { currentUser } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!currentUser?._id || !token) return;
+
+      const response = await apiRequest(
+        `/users/${currentUser._id}/transactions`,
+        "GET",
+        undefined,
+        token
+      );
+
+      setTransactions(response || []);
+    } catch (error) {
+      console.error("Failed to fetch transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTransactions = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (!currentUser?._id || !token) return;
-
-        // Fetch all types of transactions
-        const [incomeData, debtData, expenseData] = await Promise.all([
-          apiRequest(
-            `/users/${currentUser._id}/incomes`,
-            "GET",
-            undefined,
-            token
-          ),
-          apiRequest(
-            `/users/${currentUser._id}/debts`,
-            "GET",
-            undefined,
-            token
-          ),
-          apiRequest(
-            `/users/${currentUser._id}/expenses`,
-            "GET",
-            undefined,
-            token
-          ),
-        ]);
-
-        // Combine and label transactions
-        const formattedTransactions: Transaction[] = [
-          ...(incomeData || []).map((item: any) => ({
-            ...item,
-            type: "income",
-          })),
-          ...(debtData || []).map((item: any) => ({
-            ...item,
-            type: "debt",
-          })),
-          ...(expenseData || []).map((item: any) => ({
-            ...item,
-            type: "expense",
-          })),
-        ];
-
-        // Sort transactions by date (most recent first)
-        formattedTransactions.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        setTransactions(formattedTransactions);
-      } catch (error) {
-        console.error("Failed to fetch transactions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTransactions();
   }, [currentUser]);
 
   if (loading) {
     return (
       <CustomBackground style={styles.container}>
-        <ActivityIndicator size="large" color="#4a5dff" />
+        <ActivityIndicator size="large" color={theme.purple} />
       </CustomBackground>
     );
   }
 
   return (
     <CustomBackground style={styles.container}>
-      <View style={{ marginBottom: 10 }}>
-        <CustomText style={{ fontSize: 30, fontWeight: "bold" }}>
-          Transactions
-        </CustomText>
-      </View>
+      <CustomHeader title="Transactions" />
 
       <FlatList
         data={transactions}
@@ -113,13 +70,12 @@ const TransactionScreen = () => {
               ? "green"
               : item.type === "debt"
               ? "yellow"
-              : "red";
+              : item.type === "expense"
+              ? "red"
+              : "#4a5dff";
 
           return (
             <View style={styles.itemContainer}>
-              <TouchableOpacity style={styles.moreButton}>
-                <Text style={styles.moreButtonText}>...</Text>
-              </TouchableOpacity>
               <View style={styles.item}>
                 <View>
                   <CustomText style={styles.title}>{item.title}</CustomText>
@@ -130,7 +86,7 @@ const TransactionScreen = () => {
 
                 <CustomText>
                   <Text style={{ color: textColor }}>
-                    {item.type === "income"
+                    {item.type === "income" || item.type === "investment"
                       ? "+"
                       : item.type === "expense"
                       ? "-"
@@ -142,7 +98,13 @@ const TransactionScreen = () => {
             </View>
           );
         }}
-        ListEmptyComponent={<CustomText>No transactions found.</CustomText>}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <CustomListEmpty
+            message="No transactions found"
+            onRetry={() => fetchTransactions()}
+          />
+        }
       />
     </CustomBackground>
   );
@@ -154,6 +116,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  listContent: {
+    paddingBottom: 70,
   },
   itemContainer: {
     flexDirection: "column",

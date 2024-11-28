@@ -1,5 +1,11 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  ViewStyle,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { CustomText } from "../common";
 import useTheme from "../../hooks/useThemeColor";
@@ -7,11 +13,17 @@ import { useNavigation } from "@react-navigation/native";
 
 interface HeaderProps {
   title: string;
+  back?: boolean;
   onBackPress?: () => void;
   rightItems?: React.ReactNode[];
 }
 
-const CustomHeader: React.FC<HeaderProps> = ({ title, onBackPress, rightItems = [] }) => {
+const CustomHeader: React.FC<HeaderProps> = ({
+  title,
+  back,
+  onBackPress,
+  rightItems = [],
+}) => {
   const { theme } = useTheme();
   const navigation = useNavigation();
 
@@ -26,12 +38,15 @@ const CustomHeader: React.FC<HeaderProps> = ({ title, onBackPress, rightItems = 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Back Button */}
-      <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-        <Ionicons name="chevron-back" size={24} color={theme.text} />
-      </TouchableOpacity>
-
+      {back && (
+        <TouchableOpacity onPress={handleBackPress}>
+          <Ionicons name="chevron-back" size={24} color={theme.text} />
+        </TouchableOpacity>
+      )}
       {/* Title */}
-      <CustomText style={[styles.title, { color: theme.text }]}>{title}</CustomText>
+      <CustomText style={[styles.title, { color: theme.text }]}>
+        {title}
+      </CustomText>
 
       {/* Right Items */}
       <View style={styles.rightContainer}>
@@ -49,29 +64,23 @@ export default CustomHeader;
 
 const styles = StyleSheet.create({
   container: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 12,
-    height: 60,
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
-  },
-  backButton: {
-    padding: 5,
-    marginRight: 8,
+    paddingVertical: StatusBar.currentHeight || 20,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    flex: 1,
     textAlign: "center",
+    flex: 1,
   },
   rightContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   rightItem: {
-    marginLeft: 12,
+    marginLeft: 10,
   },
 });
