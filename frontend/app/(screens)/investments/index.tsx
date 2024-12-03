@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import {
   CustomBackground,
@@ -18,7 +19,6 @@ import {
 import { useAuth } from "@/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  apiRequest,
   fetchAllInvestments,
   updateInvestment,
   deleteInvestment,
@@ -130,6 +130,9 @@ export default function InvestmentScreen() {
       <FlatList
         data={investments}
         keyExtractor={(item) => item._id}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fetchInvestments} />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.itemContainer}

@@ -5,7 +5,6 @@ import {
   CustomBottomSheet,
   CustomButton,
   CustomInput,
-  CustomText,
   KeyboardLayout,
 } from "@/components";
 import { useAuth } from "@/hooks";
@@ -39,7 +38,6 @@ export default function AddInvestmentScreen() {
           description,
         };
         await addInvestment(currentUser?._id, payload, token);
-        // Alert with options
         Alert.alert(
           "Success",
           "Investment added successfully!",

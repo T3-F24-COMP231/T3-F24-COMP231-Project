@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Text,
+  RefreshControl,
 } from "react-native";
 import { CustomBackground, CustomHeader, CustomText } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
@@ -47,47 +48,46 @@ export default function Index() {
     }
   }, [currentUser, isLoading, router]);
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (currentUser?._id && token) {
+        // Fetch incomes
+        const incomesData = await apiRequest(
+          `/users/${currentUser._id}/incomes`,
+          "GET",
+          undefined,
+          token
+        );
+        setIncomes(incomesData || []);
+
+        // Fetch expenses
+        const expensesData = await apiRequest(
+          `/users/${currentUser._id}/expenses`,
+          "GET",
+          undefined,
+          token
+        );
+        setExpenses(expensesData || []);
+
+        // Fetch debts
+        const debtsData = await apiRequest(
+          `/users/${currentUser._id}/debts`,
+          "GET",
+          undefined,
+          token
+        );
+        setDebts(debtsData || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   // Fetch data from the backend
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (currentUser?._id && token) {
-          // Fetch incomes
-          const incomesData = await apiRequest(
-            `/users/${currentUser._id}/incomes`,
-            "GET",
-            undefined,
-            token
-          );
-          setIncomes(incomesData || []);
-
-          // Fetch expenses
-          const expensesData = await apiRequest(
-            `/users/${currentUser._id}/expenses`,
-            "GET",
-            undefined,
-            token
-          );
-          setExpenses(expensesData || []);
-
-          // Fetch debts
-          const debtsData = await apiRequest(
-            `/users/${currentUser._id}/debts`,
-            "GET",
-            undefined,
-            token
-          );
-          setDebts(debtsData || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (currentUser) {
       fetchData();
     }
@@ -148,6 +148,7 @@ export default function Index() {
         <ScrollView
           contentContainerStyle={styles.scrollView}
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchData} />}
         >
           <CustomHeader
             title={`Welcome, ${currentUser.name}`}

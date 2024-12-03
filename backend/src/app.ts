@@ -11,6 +11,7 @@ import investmentRoutes from './routes/investmentRoutes';
 import roleRoutes from './routes/roleRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import transactionRoutes from './routes/transactionRoutes';
+import activityRoutes from './routes/activityRoutes';
 
 const app: Application = express();
 
@@ -33,8 +34,7 @@ app.use("/api", investmentRoutes);
 app.use("/api", roleRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api", transactionRoutes);
-
-
+app.use("/api", activityRoutes);
 
 // app.use(cors({
 //   origin: 'http://localhost:4000',

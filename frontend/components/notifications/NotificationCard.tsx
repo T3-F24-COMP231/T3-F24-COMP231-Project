@@ -34,7 +34,6 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
     setIsLoading(true);
     const token = await getToken();
     try {
-      // Mark notification as read
       await apiRequest(
         `/users/${notification.userId}/notifications/${notification._id}/mark-read`,
         "PUT",

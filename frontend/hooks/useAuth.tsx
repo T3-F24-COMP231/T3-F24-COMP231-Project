@@ -10,6 +10,7 @@ import { IUser } from "../types";
 import { BASE_URL } from "@/api";
 import { Alert } from "react-native";
 import { router } from "expo-router";
+import { getToken } from "@/utils";
 
 interface AuthContextType {
   currentUser: IUser | null;
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const fetchCurrentUser = async () => {
     setIsLoading(true);
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken()
       if (!token) {
         setCurrentUser(null);
         return;
@@ -122,7 +123,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken()
 
       await fetch(`${BASE_URL}/logout`, {
         method: "POST",
