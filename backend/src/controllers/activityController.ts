@@ -1,54 +1,32 @@
-import { Request, Response } from "express";
-import { Activity } from "../models/activityModel";
-import { sendSuccess, sendError } from "../utils";
+import { Activity } from "../models";
+import { ExpressHandler } from "../types";
+import { sendError, sendSuccess } from "../utils";
 
-// Get all activities (Admin only)
-export const getActivities = async (req: Request, res: Response) => {
+export const getAllActivities: ExpressHandler = async (req, res) => {
   try {
-    const { userId, adminId, entity, action, startDate, endDate } = req.query;
+    const activities = await Activity.find().sort({ timestamp: -1 });
 
-    // Filter based on query parameters
-    const filter: Record<string, any> = {};
-    if (userId) filter.userId = userId;
-    if (adminId) filter.adminId = adminId;
-    if (entity) filter.entity = entity;
-    if (action) filter.action = action;
-    if (startDate && endDate) {
-      filter.timestamp = {
-        $gte: new Date(startDate as string),
-        $lte: new Date(endDate as string),
-      };
+    if (!activities.length) {
+      res.status(204).json({ message: "No activities found." });
+      return;
     }
-
-    const activities = await Activity.find(filter)
-      .sort({ timestamp: -1 })
-      .populate("userId", "name email")
-      .populate("adminId", "name email");
-
-    sendSuccess(res, activities, "Activities fetched successfully");
+    sendSuccess(res, activities);
   } catch (error) {
-    sendError(res, "Failed to fetch activities", 500);
+    sendError(res, "Server error", 500);
   }
 };
 
-// Add a new activity (for testing or manual logging)
-export const addActivity = async (req: Request, res: Response) => {
+export const getActivitiesByEventType: ExpressHandler = async (req, res) => {
+  const { eventType } = req.params;
+
   try {
-    const { userId, adminId, action, entity, entityId, metadata, ipAddress, userAgent } = req.body;
+    const activities = await Activity.find({ event: eventType })
+      .populate("actionBy", "name email")
+      .sort({ timestamp: -1 });
 
-    const activity = await Activity.create({
-      userId,
-      adminId,
-      action,
-      entity,
-      entityId,
-      metadata,
-      ipAddress,
-      userAgent,
-    });
-
-    sendSuccess(res, activity, "Activity logged successfully");
+    sendSuccess(res, activities);
   } catch (error) {
-    sendError(res, "Failed to log activity", 500);
+    console.error("Error fetching activities by event type:", error);
+    sendError(res, "Server error", 500);
   }
 };
