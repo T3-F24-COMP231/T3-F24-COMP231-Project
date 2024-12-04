@@ -1,31 +1,27 @@
-const mongoose = require("mongoose");
+import mongoose, { Schema, Document, Types } from "mongoose";
 
-const activitySchema = new mongoose.Schema(
+export interface IActivity extends Document {
+  event: string;
+  description: string;
+  actionBy: Types.ObjectId | null;
+  metaData: Record<string, any>;
+  timestamp: Date;
+}
+
+const activitySchema = new Schema<IActivity>(
   {
     event: {
       type: String,
       required: true,
-      enum: [
-        // User-related events
-        "USER_SIGNUP",
-        "USER_SIGNUP_FAILED",
-        "USER_SIGNUP_ERROR",
-        "USER_LOGIN",
-        "USER_LOGIN_FAILED",
-        "USER_LOGIN_ERROR",
-        "USER_LOGOUT",
-        "USER_LOGOUT_ERROR",
-        "USER_DELETE_ACCOUNT",
-      ],
     },
     description: {
       type: String,
       required: true,
     },
     actionBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
-      required: false, // Optional for system-wide activities
+      required: false,
     },
     metaData: {
       type: Object,
@@ -39,4 +35,4 @@ const activitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Activity = mongoose.model("Activity", activitySchema);
+export const Activity = mongoose.model<IActivity>("Activity", activitySchema);

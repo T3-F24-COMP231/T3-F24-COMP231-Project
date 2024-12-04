@@ -1,5 +1,7 @@
 import { Activity } from "../models";
 import { LogActivityInput } from "../types";
+import User from "../models/userModel";
+import { toObjectIdOrNull } from "./toObjectIdOrNull";
 
 /**
  * Logs an activity to the Activity collection.
@@ -13,11 +15,17 @@ export const logActivity = async (
   const { event, description, actionBy, metaData = {} } = activityData;
 
   try {
+    const userId = toObjectIdOrNull(actionBy); // Ensure actionBy is valid or null
+    const user = userId ? await User.findById(userId).select("name") : null;
+
     const newActivity = new Activity({
       event,
       description,
-      actionBy,
-      metaData,
+      actionBy: userId,
+      metaData: {
+        ...metaData,
+        userName: user?.name || "Unknown User",
+      },
     });
 
     await newActivity.save();

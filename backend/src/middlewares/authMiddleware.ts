@@ -20,7 +20,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       return sendError(res, "User not found", 404);
     }
 
-    req.user = { id: user._id.toString(), role: user.role };
+    req.user = { id: user._id.toString(), name: user.name, role: user.role };
     next();
   } catch (error) {
     sendError(res, "Not authorized, token failed", 401);

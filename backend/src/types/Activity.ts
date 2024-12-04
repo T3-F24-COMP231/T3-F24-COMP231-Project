@@ -9,6 +9,6 @@ export interface ActivityMetaData {
 export interface LogActivityInput {
   event: string;
   description: string;
-  actionBy: Types.ObjectId | string;
+  actionBy: Types.ObjectId | string | null;
   metaData?: ActivityMetaData;
 }
