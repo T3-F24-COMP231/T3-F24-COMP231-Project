@@ -1,6 +1,6 @@
 import { Category, Expense, Notification, Transaction } from "../models";
 import { ExpressHandler } from "../types";
-import { getStartOfMonth, getStartOfWeek, sendError, sendSuccess } from "../utils";
+import { sendError, sendSuccess, logActivity } from "../utils";
 
 export const addExpense: ExpressHandler = async (req, res) => {
   try {
@@ -8,6 +8,12 @@ export const addExpense: ExpressHandler = async (req, res) => {
     const { userId } = req.params;
 
     if (!category) {
+      logActivity({
+        event: "ADD_EXPENSE_FAILED",
+        description: "Category field is missing",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId, title, amount, description },
+      });
       return sendError(res, "Category field is required", 400);
     }
 
@@ -42,10 +48,25 @@ export const addExpense: ExpressHandler = async (req, res) => {
       resourceId: expense._id,
     });
 
+    logActivity({
+      event: "ADD_EXPENSE_SUCCESS",
+      description: "New expense added successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, expense },
+    });
+
     sendSuccess(res, expense, "Expense successfully added");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "ADD_EXPENSE_ERROR",
+      description: `Failed to add expense: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId, body: req.body },
+    });
+
     sendError(res, `Failed to add expense: ${errorMessage}`, 500);
   }
 };
@@ -56,13 +77,34 @@ export const getExpenses: ExpressHandler = async (req, res) => {
     const expenses = await Expense.find({ userId });
 
     if (!expenses.length) {
+      logActivity({
+        event: "GET_EXPENSES_SUCCESS",
+        description: "No expenses found for this user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId },
+      });
       return sendSuccess(res, [], "No expenses found for this user");
     }
+
+    logActivity({
+      event: "GET_EXPENSES_SUCCESS",
+      description: "Fetched expenses successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, count: expenses.length },
+    });
 
     sendSuccess(res, expenses, "Expenses fetched successfully");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "GET_EXPENSES_ERROR",
+      description: `Failed to fetch expenses: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId },
+    });
+
     sendError(res, `Failed to fetch expenses: ${errorMessage}`, 500);
   }
 };
@@ -78,6 +120,12 @@ export const updateExpense: ExpressHandler = async (req, res) => {
     );
 
     if (!updatedExpense) {
+      logActivity({
+        event: "UPDATE_EXPENSE_FAILED",
+        description: "Expense not found for this user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId, updates: req.body },
+      });
       return sendError(res, "Expense not found for this user", 404);
     }
 
@@ -99,10 +147,25 @@ export const updateExpense: ExpressHandler = async (req, res) => {
       resourceId: updatedExpense._id,
     });
 
+    logActivity({
+      event: "UPDATE_EXPENSE_SUCCESS",
+      description: "Expense updated successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, updatedExpense },
+    });
+
     sendSuccess(res, updatedExpense, "Expense successfully updated");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "UPDATE_EXPENSE_ERROR",
+      description: `Failed to update expense: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { id: req.params.id, userId: req.params.userId, updates: req.body },
+    });
+
     sendError(res, `Failed to update expense: ${errorMessage}`, 500);
   }
 };
@@ -117,6 +180,12 @@ export const deleteExpense: ExpressHandler = async (req, res) => {
     });
 
     if (!deletedExpense) {
+      logActivity({
+        event: "DELETE_EXPENSE_FAILED",
+        description: "Expense not found for this user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId },
+      });
       return sendError(res, "Expense not found for this user", 404);
     }
 
@@ -134,50 +203,25 @@ export const deleteExpense: ExpressHandler = async (req, res) => {
       resourceId: deletedExpense._id,
     });
 
+    logActivity({
+      event: "DELETE_EXPENSE_SUCCESS",
+      description: "Expense deleted successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, deletedExpense },
+    });
+
     sendSuccess(res, deletedExpense, "Expense successfully deleted");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "DELETE_EXPENSE_ERROR",
+      description: `Failed to delete expense: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { id: req.params.id, userId: req.params.userId },
+    });
+
     sendError(res, `Failed to delete expense: ${errorMessage}`, 500);
-  }
-};
-
-export const getExpenseSummary: ExpressHandler = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const period =
-      typeof req.query.period === "string" ? req.query.period : "";
-
-    if (!period || !["weekly", "monthly"].includes(period)) {
-      return sendError(
-        res,
-        "Invalid period. Please use 'weekly' or 'monthly'.",
-        400
-      );
-    }
-
-    const startDate =
-      period === "weekly" ? getStartOfWeek() : getStartOfMonth();
-    const endDate = new Date();
-
-    const summary = await Expense.aggregate([
-      {
-        $match: { userId, createdAt: { $gte: startDate, $lte: endDate } },
-      },
-      {
-        $group: {
-          _id: "$category",
-          totalAmount: { $sum: "$amount" },
-          count: { $sum: 1 },
-        },
-      },
-      { $project: { _id: 0, category: "$_id", totalAmount: 1, count: 1 } },
-    ]);
-
-    sendSuccess(res, summary, `Expense summary for the ${period}`);
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
-    sendError(res, `Failed to fetch expense summary: ${errorMessage}`, 500);
   }
 };

@@ -14,7 +14,7 @@ export const Signup: ExpressHandler = async (req, res) => {
       await logActivity({
         event: "USER_SIGNUP_FAILED",
         description: `Signup attempt failed. User already exists with email: ${email}`,
-        actionBy: "SYSTEM",
+        actionBy: null,
         metaData: { email, ...extractDeviceInfo(req) },
       });
       return sendError(res, "User already exists with this email", 400);
@@ -34,7 +34,7 @@ export const Signup: ExpressHandler = async (req, res) => {
     await logActivity({
       event: "USER_SIGNUP",
       description: `New user signed up: ${name} as ${role}`,
-      actionBy: newUser._id,
+      actionBy: req?.user?.id || null,
       metaData: { userId: newUser._id, role, ...extractDeviceInfo(req) },
     });
 
@@ -44,7 +44,7 @@ export const Signup: ExpressHandler = async (req, res) => {
     await logActivity({
       event: "USER_SIGNUP_ERROR",
       description: `Signup failed for email: ${email}`,
-      actionBy: "SYSTEM",
+      actionBy: req?.user?.id || null,
       metaData: { error: errorMessage, ...extractDeviceInfo(req) },
     });
     sendError(res, `Failed to create user: ${errorMessage}`, 500);
@@ -60,7 +60,7 @@ export const Login: ExpressHandler = async (req, res) => {
       await logActivity({
         event: "USER_LOGIN_FAILED",
         description: `Login attempt failed for email: ${email}. User not found.`,
-        actionBy: "SYSTEM",
+        actionBy: req?.user?.id || null,
         metaData: { email, ...extractDeviceInfo(req) },
       });
       return sendError(res, "Invalid email or password", 400);
@@ -71,7 +71,7 @@ export const Login: ExpressHandler = async (req, res) => {
       await logActivity({
         event: "USER_LOGIN_FAILED",
         description: `Login attempt failed for email: ${email}. Incorrect password.`,
-        actionBy: "SYSTEM",
+        actionBy: req?.user?.id || null,
         metaData: { email, ...extractDeviceInfo(req) },
       });
       return sendError(res, "Invalid email or password", 400);
@@ -86,7 +86,7 @@ export const Login: ExpressHandler = async (req, res) => {
     await logActivity({
       event: "USER_LOGIN",
       description: `${user.name} logged in successfully.`,
-      actionBy: user._id,
+      actionBy: req?.user?.id || null,
       metaData: { userId: user._id, ...extractDeviceInfo(req) },
     });
 
@@ -96,7 +96,7 @@ export const Login: ExpressHandler = async (req, res) => {
     await logActivity({
       event: "USER_LOGIN_ERROR",
       description: `Login failed for email: ${email}`,
-      actionBy: "SYSTEM",
+      actionBy: req?.user?.id || null,
       metaData: { error: errorMessage, ...extractDeviceInfo(req) },
     });
     sendError(res, `Failed to log in: ${errorMessage}`, 500);
@@ -111,8 +111,8 @@ export const Logout: ExpressHandler = async (req, res) => {
     await logActivity({
       event: "USER_LOGOUT",
       description: `${user?.name} logged out successfully.`,
-      actionBy: user?._id || "SYSTEM",
-      metaData: { userId: user?._id, ...extractDeviceInfo(req) },
+      actionBy: user?.name || "SYSTEM",
+      metaData: { user: user?.name, ...extractDeviceInfo(req) },
     });
 
     sendSuccess(res, null, "User logged out successfully");
@@ -120,8 +120,8 @@ export const Logout: ExpressHandler = async (req, res) => {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     await logActivity({
       event: "USER_LOGOUT_ERROR",
-      description: `Logout failed for userId: ${req.user?._id}`,
-      actionBy: "SYSTEM",
+      description: `Logout failed for ${req.user?.name}`,
+      actionBy: req?.user?.id || null,
       metaData: { error: errorMessage, ...extractDeviceInfo(req) },
     });
     sendError(res, `Failed to log out: ${errorMessage}`, 500);

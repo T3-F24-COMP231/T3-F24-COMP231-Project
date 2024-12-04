@@ -1,4 +1,4 @@
-import { sendError, sendSuccess } from "../utils";
+import { logActivity, sendError, sendSuccess } from "../utils";
 import { Debt, Notification, Transaction } from "../models";
 import { ExpressHandler } from "../types";
 
@@ -8,7 +8,14 @@ export const addDebt: ExpressHandler = async (req, res) => {
     const { userId } = req.params;
 
     if (!title || !amount) {
-      return sendError(res, "Title and amount are required", 400);
+      const errorMsg = "Title and amount are required";
+      logActivity({
+        event: "ADD_DEBT_FAILED",
+        description: errorMsg,
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { title, amount, userId },
+      });
+      return sendError(res, errorMsg, 400);
     }
 
     const debt = await Debt.create({
@@ -37,33 +44,24 @@ export const addDebt: ExpressHandler = async (req, res) => {
       resourceId: debt._id,
     });
 
+    // Log activity
+    logActivity({
+      event: "ADD_DEBT_SUCCESS",
+      description: `Debt "${title}" added by ${req.user?.name}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { debtId: debt._id, amount },
+    });
+
     sendSuccess(res, debt, "Debt information successfully added");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    logActivity({
+      event: "ADD_DEBT_ERROR",
+      description: `Error adding debt: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId, error: errorMessage },
+    });
     sendError(res, `Failed to add debt information: ${errorMessage}`, 500);
-  }
-};
-
-
-export const getDebts: ExpressHandler = async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return sendError(res, "User ID is required", 400);
-    }
-
-    const debts = await Debt.find({ userId });
-
-    if (!debts.length) {
-      return sendSuccess(res, [], "No debts found for this user");
-    }
-
-    sendSuccess(res, debts, "Debts fetched successfully");
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
-    sendError(res, `Failed to fetch debts: ${errorMessage}`, 500);
   }
 };
 
@@ -73,7 +71,14 @@ export const updateDebt: ExpressHandler = async (req, res) => {
     const { paymentReminder, ...otherUpdates } = req.body;
 
     if (!id || !userId) {
-      return sendError(res, "Debt ID and User ID are required", 400);
+      const errorMsg = "Debt ID and User ID are required";
+      logActivity({
+        event: "UPDATE_DEBT_FAILED",
+        description: errorMsg,
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId, updates: req.body },
+      });
+      return sendError(res, errorMsg, 400);
     }
 
     const updatedDebt = await Debt.findOneAndUpdate(
@@ -83,7 +88,14 @@ export const updateDebt: ExpressHandler = async (req, res) => {
     );
 
     if (!updatedDebt) {
-      return sendError(res, "Debt not found for this user", 404);
+      const errorMsg = "Debt not found for this user";
+      logActivity({
+        event: "UPDATE_DEBT_FAILED",
+        description: errorMsg,
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId },
+      });
+      return sendError(res, errorMsg, 404);
     }
 
     // Update associated transaction
@@ -104,26 +116,53 @@ export const updateDebt: ExpressHandler = async (req, res) => {
       resourceId: updatedDebt._id,
     });
 
+    // Log activity
+    logActivity({
+      event: "UPDATE_DEBT_SUCCESS",
+      description: `Debt "${updatedDebt.title}" updated by ${req.user?.name}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { debtId: updatedDebt._id, newAmount: updatedDebt.amount },
+    });
+
     sendSuccess(res, updatedDebt, "Debt information successfully updated");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    logActivity({
+      event: "UPDATE_DEBT_ERROR",
+      description: `Error updating debt: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { debtId: req.params.id, error: errorMessage },
+    });
     sendError(res, `Failed to update debt information: ${errorMessage}`, 500);
   }
 };
-
 
 export const deleteDebt: ExpressHandler = async (req, res) => {
   try {
     const { id, userId } = req.params;
 
     if (!id || !userId) {
-      return sendError(res, "Debt ID and User ID are required", 400);
+      const errorMsg = "Debt ID and User ID are required";
+      logActivity({
+        event: "DELETE_DEBT_FAILED",
+        description: errorMsg,
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId },
+      });
+      return sendError(res, errorMsg, 400);
     }
 
     const deletedDebt = await Debt.findOneAndDelete({ _id: id, userId });
 
     if (!deletedDebt) {
-      return sendError(res, "Debt not found for this user", 404);
+      const errorMsg = "Debt not found for this user";
+      logActivity({
+        event: "DELETE_DEBT_FAILED",
+        description: errorMsg,
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId },
+      });
+      return sendError(res, errorMsg, 404);
     }
 
     // Log transaction update (mark it as deleted)
@@ -140,55 +179,68 @@ export const deleteDebt: ExpressHandler = async (req, res) => {
       resourceId: deletedDebt._id,
     });
 
+    // Log activity
+    logActivity({
+      event: "DELETE_DEBT_SUCCESS",
+      description: `Debt "${deletedDebt.title}" deleted by ${req.user?.name}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { debtId: deletedDebt._id },
+    });
+
     sendSuccess(res, deletedDebt, "Debt successfully deleted");
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    logActivity({
+      event: "DELETE_DEBT_ERROR",
+      description: `Error deleting debt: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { debtId: req.params.id, error: errorMessage },
+    });
     sendError(res, `Failed to delete debt: ${errorMessage}`, 500);
   }
 };
-
-export const handlePaymentReminders = async () => {
+export const getDebts: ExpressHandler = async (req, res) => {
   try {
-    const now = new Date();
+    const { userId } = req.params;
 
-    // Find debts with reminders that are due
-    const debtsWithReminders = await Debt.find({
-      "paymentReminder.enabled": true,
-      "paymentReminder.reminderDate": { $lte: now },
+    if (!userId) {
+      logActivity({
+        event: "GET_DEBTS_FAILED",
+        description: "User ID is required",
+        actionBy: req?.user?.id || "Unknown",
+      });
+      return sendError(res, "User ID is required", 400);
+    }
+
+    const debts = await Debt.find({ userId });
+
+    if (!debts.length) {
+      logActivity({
+        event: "GET_DEBTS_SUCCESS",
+        description: "No debts found for the user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId },
+      });
+      return sendSuccess(res, [], "No debts found for this user");
+    }
+
+    logActivity({
+      event: "GET_DEBTS_SUCCESS",
+      description: "Debts fetched successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, count: debts.length },
     });
 
-    for (const debt of debtsWithReminders) {
-      // Send notification
-      await Notification.create({
-        userId: debt.userId,
-        message: `Payment reminder: You are due to pay $${debt.paymentReminder.amountToPay} for ${debt.title}`,
-        type: "debt",
-        resourceId: debt._id,
-      });
-
-      // Update next reminder date based on frequency
-      const nextReminderDate = new Date(debt.paymentReminder.reminderDate);
-      switch (debt.paymentReminder.reminderFrequency) {
-        case "daily":
-          nextReminderDate.setDate(nextReminderDate.getDate() + 1);
-          break;
-        case "weekly":
-          nextReminderDate.setDate(nextReminderDate.getDate() + 7);
-          break;
-        case "monthly":
-          nextReminderDate.setMonth(nextReminderDate.getMonth() + 1);
-          break;
-        default:
-          break;
-      }
-
-      // Update the debt with the next reminder date
-      debt.paymentReminder.reminderDate = nextReminderDate;
-      await debt.save();
-    }
+    sendSuccess(res, debts, "Debts fetched successfully");
   } catch (error) {
-    console.error("Error handling payment reminders:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    logActivity({
+      event: "GET_DEBTS_ERROR",
+      description: `Failed to fetch debts: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId },
+    });
+    sendError(res, `Failed to fetch debts: ${errorMessage}`, 500);
   }
 };
-
