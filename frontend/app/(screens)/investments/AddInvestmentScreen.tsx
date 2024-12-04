@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { StyleSheet, Alert, View } from "react-native";
 import {
   CustomBackground,
-  CustomBottomSheet,
   CustomButton,
+  CustomHeader,
   CustomInput,
+  CustomText,
   KeyboardLayout,
 } from "@/components";
 import { useAuth } from "@/hooks";
 import { router } from "expo-router";
-import { addInvestment } from "@/utils";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { addInvestment, getToken } from "@/utils";
 
 export default function AddInvestmentScreen() {
   const { currentUser } = useAuth();
@@ -28,7 +28,7 @@ export default function AddInvestmentScreen() {
 
   const handleAddInvestment = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (currentUser?._id && token) {
         const payload = {
           userId: currentUser?._id,
@@ -47,12 +47,8 @@ export default function AddInvestmentScreen() {
               onPress: resetForm,
             },
             {
-              text: "Go home",
-              onPress: () => {
-                resetForm();
-                router.replace("/(tabs)");
-              },
-              style: "cancel",
+              text: "View Investments",
+              onPress: () => router.replace("/(screens)/investments"),
             },
           ],
           { cancelable: true }
@@ -68,41 +64,40 @@ export default function AddInvestmentScreen() {
   return (
     <KeyboardLayout>
       <CustomBackground style={styles.container}>
-        <CustomBottomSheet title="Add New Investment">
-          <View style={styles.content}>
-            <CustomInput
-              placeholder="Title"
-              value={title}
-              onChangeText={setTitle}
-              style={styles.input}
-            />
-            <CustomInput
-              placeholder="Amount"
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <CustomInput
-              placeholder="Return Percentage"
-              value={returnPercentage}
-              onChangeText={setReturnPercentage}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <CustomInput
-              placeholder="Description"
-              value={description}
-              onChangeText={setDescription}
-              style={styles.input}
-            />
-            <CustomButton
-              text="Submit Investment"
-              onPress={handleAddInvestment}
-              style={styles.button}
-            />
-          </View>
-        </CustomBottomSheet>
+        <CustomHeader back title="Add New Investment" />
+        <View style={styles.content}>
+          <CustomInput
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+            style={styles.input}
+          />
+          <CustomInput
+            placeholder="Amount"
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+          <CustomInput
+            placeholder="Return Percentage"
+            value={returnPercentage}
+            onChangeText={setReturnPercentage}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+          <CustomInput
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+            style={styles.input}
+          />
+          <CustomButton
+            text="Submit Investment"
+            onPress={handleAddInvestment}
+            style={styles.button}
+          />
+        </View>
       </CustomBackground>
     </KeyboardLayout>
   );
@@ -111,12 +106,12 @@ export default function AddInvestmentScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    justifyContent: "space-between",
+    paddingVertical: 20,
   },
   title: {
     fontSize: 24,
@@ -126,10 +121,10 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "100%",
-    marginBottom: 16,
+    marginBottom: 20,
   },
   button: {
     width: "100%",
-    marginTop: 20,
+    marginTop: 30,
   },
 });

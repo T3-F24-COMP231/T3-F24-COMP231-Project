@@ -1,16 +1,15 @@
 import React, { useState } from "react";
-import { StyleSheet, Alert, View } from "react-native";
+import { StyleSheet, Alert, View, ScrollView } from "react-native";
 import {
   CustomBackground,
-  CustomBottomSheet,
   CustomButton,
+  CustomHeader,
   CustomInput,
   CustomText,
   KeyboardLayout,
 } from "@/components";
-import { addIncome } from "@/utils";
+import { addIncome, getToken } from "@/utils";
 import { useAuth } from "@/hooks";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
 export default function AddIncomeScreen() {
@@ -28,7 +27,7 @@ export default function AddIncomeScreen() {
 
   const handleAddIncome = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (currentUser?._id && token) {
         await addIncome(
           currentUser._id,
@@ -46,12 +45,8 @@ export default function AddIncomeScreen() {
               onPress: resetForm,
             },
             {
-              text: "Go home",
-              onPress: () => {
-                resetForm();
-                router.replace("/(tabs)");
-              },
-              style: "cancel",
+              text: "View Incomes",
+              onPress: () => router.replace("/(screens)/incomes"),
             },
           ],
           { cancelable: true }
@@ -67,8 +62,8 @@ export default function AddIncomeScreen() {
   return (
     <KeyboardLayout>
       <CustomBackground style={styles.container}>
-        <CustomText style={styles.title}></CustomText>
-        <CustomBottomSheet title="Add New Income">
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          <CustomHeader back title="Add New Income" />
           <View style={styles.content}>
             <CustomInput
               placeholder="Title"
@@ -95,7 +90,7 @@ export default function AddIncomeScreen() {
               style={styles.button}
             />
           </View>
-        </CustomBottomSheet>
+        </ScrollView>
       </CustomBackground>
     </KeyboardLayout>
   );
@@ -104,12 +99,14 @@ export default function AddIncomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "flex-end",
+    padding: 20,
+  },
+  scrollView: {
+    flexGrow: 1,
+    justifyContent: "center",
   },
   content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    marginTop: 20,
   },
   title: {
     fontSize: 24,

@@ -4,14 +4,20 @@ import { ExpressHandler } from "../types";
 
 export const addDebt: ExpressHandler = async (req, res) => {
   try {
-    const { title, amount, description } = req.body;
+    const { title, amount, description, paymentReminder } = req.body;
     const { userId } = req.params;
 
     if (!title || !amount) {
       return sendError(res, "Title and amount are required", 400);
     }
 
-    const debt = await Debt.create({ userId, title, amount, description });
+    const debt = await Debt.create({
+      userId,
+      title,
+      amount,
+      description,
+      paymentReminder,
+    });
 
     // Log transaction
     await Transaction.create({
@@ -33,11 +39,11 @@ export const addDebt: ExpressHandler = async (req, res) => {
 
     sendSuccess(res, debt, "Debt information successfully added");
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     sendError(res, `Failed to add debt information: ${errorMessage}`, 500);
   }
 };
+
 
 export const getDebts: ExpressHandler = async (req, res) => {
   try {
@@ -64,6 +70,7 @@ export const getDebts: ExpressHandler = async (req, res) => {
 export const updateDebt: ExpressHandler = async (req, res) => {
   try {
     const { id, userId } = req.params;
+    const { paymentReminder, ...otherUpdates } = req.body;
 
     if (!id || !userId) {
       return sendError(res, "Debt ID and User ID are required", 400);
@@ -71,7 +78,7 @@ export const updateDebt: ExpressHandler = async (req, res) => {
 
     const updatedDebt = await Debt.findOneAndUpdate(
       { _id: id, userId },
-      req.body,
+      { ...otherUpdates, paymentReminder },
       { new: true }
     );
 
@@ -99,11 +106,11 @@ export const updateDebt: ExpressHandler = async (req, res) => {
 
     sendSuccess(res, updatedDebt, "Debt information successfully updated");
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     sendError(res, `Failed to update debt information: ${errorMessage}`, 500);
   }
 };
+
 
 export const deleteDebt: ExpressHandler = async (req, res) => {
   try {
@@ -140,3 +147,48 @@ export const deleteDebt: ExpressHandler = async (req, res) => {
     sendError(res, `Failed to delete debt: ${errorMessage}`, 500);
   }
 };
+
+export const handlePaymentReminders = async () => {
+  try {
+    const now = new Date();
+
+    // Find debts with reminders that are due
+    const debtsWithReminders = await Debt.find({
+      "paymentReminder.enabled": true,
+      "paymentReminder.reminderDate": { $lte: now },
+    });
+
+    for (const debt of debtsWithReminders) {
+      // Send notification
+      await Notification.create({
+        userId: debt.userId,
+        message: `Payment reminder: You are due to pay $${debt.paymentReminder.amountToPay} for ${debt.title}`,
+        type: "debt",
+        resourceId: debt._id,
+      });
+
+      // Update next reminder date based on frequency
+      const nextReminderDate = new Date(debt.paymentReminder.reminderDate);
+      switch (debt.paymentReminder.reminderFrequency) {
+        case "daily":
+          nextReminderDate.setDate(nextReminderDate.getDate() + 1);
+          break;
+        case "weekly":
+          nextReminderDate.setDate(nextReminderDate.getDate() + 7);
+          break;
+        case "monthly":
+          nextReminderDate.setMonth(nextReminderDate.getMonth() + 1);
+          break;
+        default:
+          break;
+      }
+
+      // Update the debt with the next reminder date
+      debt.paymentReminder.reminderDate = nextReminderDate;
+      await debt.save();
+    }
+  } catch (error) {
+    console.error("Error handling payment reminders:", error);
+  }
+};
+

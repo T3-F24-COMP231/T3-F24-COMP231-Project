@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { SetStateAction, useEffect, useState } from "react";
 import {
   StyleSheet,
   FlatList,
@@ -7,6 +7,8 @@ import {
   View,
   Alert,
   Text,
+  Switch,
+  ScrollView,
 } from "react-native";
 import {
   CustomBackground,
@@ -17,12 +19,13 @@ import {
   CustomModal,
   CustomHeader,
   CustomListEmpty,
+  KeyboardLayout,
 } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import { IDebt } from "@/types";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiRequest } from "@/utils";
+import { apiRequest, getToken } from "@/utils";
 import Checkbox from "expo-checkbox";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default function DebtsScreen() {
   const { theme } = useTheme();
@@ -38,11 +41,13 @@ export default function DebtsScreen() {
   const [title, setTitle] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [reminderFrequency, setReminderFrequency] = useState("monthly");
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 
   const fetchDebts = async () => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (currentUser?._id && token) {
         const data = await apiRequest(
           `/users/${currentUser._id}/debts`,
@@ -93,7 +98,7 @@ export default function DebtsScreen() {
 
   const handleDeleteSelected = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (!token) return;
 
       for (const id of selectedIds) {
@@ -119,29 +124,23 @@ export default function DebtsScreen() {
 
   const handleUpdateDebt = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (!token || !currentDebt) return;
 
       await apiRequest(
         `/users/${currentUser?._id}/debt/${currentDebt._id}`,
         "PUT",
-        { title, amount: parseFloat(amount), description },
+        currentDebt,
         token
       );
 
       Alert.alert("Success", "Debt updated successfully.");
       setDebts(
-        debts.map((debt) =>
-          debt._id === currentDebt._id
-            ? { ...debt, title, amount: parseFloat(amount), description }
-            : debt
-        )
+        debts.map((debt) => (debt._id === currentDebt._id ? currentDebt : debt))
       );
       setFilteredDebts(
         filteredDebts.map((debt) =>
-          debt._id === currentDebt._id
-            ? { ...debt, title, amount: parseFloat(amount), description }
-            : debt
+          debt._id === currentDebt._id ? currentDebt : debt
         )
       );
       setIsModalVisible(false);
@@ -164,7 +163,7 @@ export default function DebtsScreen() {
 
   return (
     <CustomBackground style={styles.container}>
-      <CustomHeader title="All Debts" />
+      <CustomHeader back title="All Debts" />
       <View style={styles.searchContainer}>
         <CustomInput
           placeholder="Search debts..."
@@ -182,7 +181,6 @@ export default function DebtsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Debts List */}
       <FlatList
         data={filteredDebts}
         keyExtractor={(item) => item._id}
@@ -210,6 +208,22 @@ export default function DebtsScreen() {
                     " " +
                     new Date(item.date).toLocaleTimeString()}
                 </CustomText>
+                {item.paymentReminder?.enabled && (
+                  <>
+                    <CustomText>
+                      Reminder: {item.paymentReminder.reminderFrequency}
+                    </CustomText>
+                    <CustomText>
+                      Amount to Pay: ${item.paymentReminder.amountToPay}
+                    </CustomText>
+                    <CustomText>
+                      Reminder Date:{" "}
+                      {new Date(
+                        item.paymentReminder.reminderDate
+                      ).toLocaleString()}
+                    </CustomText>
+                  </>
+                )}
               </View>
             </CustomView>
           </TouchableOpacity>
@@ -226,8 +240,8 @@ export default function DebtsScreen() {
         <CustomButton text="Delete Selected" onPress={handleDeleteSelected} />
       )}
 
-      {/* Update Modal */}
       {currentDebt && (
+        <ScrollView>
         <CustomModal
           isVisible={isModalVisible}
           onClose={() => setIsModalVisible(false)}
@@ -249,8 +263,112 @@ export default function DebtsScreen() {
             value={description}
             onChangeText={setDescription}
           />
+          <View style={styles.reminderSection}>
+            <View style={styles.switchContainer}>
+              <CustomText style={styles.switchLabel}>
+                Enable Payment Reminder
+              </CustomText>
+              <Switch
+                value={currentDebt?.paymentReminder?.enabled || false}
+                onValueChange={(value) =>
+                  setCurrentDebt((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          paymentReminder: {
+                            ...prev.paymentReminder,
+                            enabled: value,
+                          },
+                        }
+                      : null
+                  )
+                }
+              />
+            </View>
+            {currentDebt?.paymentReminder?.enabled && (
+              <>
+                <CustomInput
+                  placeholder="Amount to Pay"
+                  value={String(currentDebt.paymentReminder?.amountToPay || "")}
+                  onChangeText={(value) =>
+                    setCurrentDebt((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            paymentReminder: {
+                              ...prev.paymentReminder,
+                              amountToPay: parseFloat(value),
+                            },
+                          }
+                        : null
+                    )
+                  }
+                  keyboardType="numeric"
+                />
+                <View style={styles.pickerContainer}>
+                  <Text style={{ color: theme.text }}>Reminder Frequency</Text>
+                  <TouchableOpacity
+                    style={styles.frequencyButton}
+                    onPress={() =>
+                      setReminderFrequency((prev) =>
+                        prev === "daily"
+                          ? "weekly"
+                          : prev === "weekly"
+                          ? "monthly"
+                          : "daily"
+                      )
+                    }
+                  >
+                    <Text style={{ color: theme.text }}>
+                      {reminderFrequency.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  style={styles.datePickerButton}
+                >
+                  <CustomText style={styles.datePickerText}>
+                    {currentDebt.paymentReminder?.reminderDate
+                      ? new Date(
+                          currentDebt.paymentReminder.reminderDate
+                        ).toLocaleDateString()
+                      : "Select Reminder Date"}
+                  </CustomText>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePickerModal
+                    isVisible={showDatePicker}
+                    mode="datetime"
+                    onConfirm={(selectedDate: any) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) {
+                        setCurrentDebt((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                paymentReminder: {
+                                  ...(prev.paymentReminder || {
+                                    enabled: false,
+                                    amountToPay: 0,
+                                    reminderFrequency: "daily",
+                                  }),
+                                  reminderDate: selectedDate,
+                                },
+                              }
+                            : null
+                        );
+                      }
+                    }}
+                    onCancel={() => setShowDatePicker(false)}
+                  />
+                )}
+              </>
+            )}
+          </View>
           <CustomButton text="Update Debt" onPress={handleUpdateDebt} />
         </CustomModal>
+        </ScrollView>
       )}
     </CustomBackground>
   );
@@ -302,5 +420,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#ffffff",
     marginTop: 5,
+  },
+  reminderSection: {
+    width: "100%",
+    marginTop: 20,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  switchLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  datePickerButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    borderColor: "#ccc",
+    marginTop: 10,
+  },
+  datePickerText: {
+    fontSize: 14,
+    color: "#555",
+  },
+  pickerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  frequencyButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    borderColor: "#ccc",
   },
 });

@@ -159,7 +159,7 @@ export default function Investment() {
         keyExtractor={(item) => item._id}
         renderItem={renderInvestment}
         ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
+        // ListFooterComponent={renderFooter}
         ListEmptyComponent={
           <CustomText style={styles.emptyMessage}>
             No investments found.
@@ -171,6 +171,7 @@ export default function Investment() {
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
       />
+      {renderFooter()}
     </CustomBackground>
   );
 }
@@ -180,7 +181,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingBottom: 70,
+    paddingBottom: 100,
+    height: "80%",
   },
   summaryContainer: {
     flexDirection: "row",

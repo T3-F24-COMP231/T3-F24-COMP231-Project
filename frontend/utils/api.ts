@@ -87,3 +87,16 @@ export const updateInvestment = (userId: string, investmentId: string, data: obj
 
 export const deleteInvestment = (userId:string, investmentId: string, token: string) =>
   apiRequest(`/users/${userId}/investments/${investmentId}`, "DELETE", undefined, token);
+
+// Savings Endpoints
+export const fetchAllSavings = (userId: string, token: string) =>
+  apiRequest(`/users/${userId}/savings`, "GET", undefined, token);
+
+export const addSaving = (userId: string, data: object, token: string) =>
+  apiRequest(`/users/${userId}/savings`, "POST", data, token);
+
+export const updateSaving = (userId: string, savingId: string, data: object, token: string) =>
+  apiRequest(`/users/${userId}/savings/${savingId}`, "PUT", data, token);
+
+export const deleteSaving = (userId: string, savingId: string, token: string) =>
+  apiRequest(`/users/${userId}/savings/${savingId}`, "DELETE", undefined, token);

@@ -17,11 +17,11 @@ import {
   CustomModal,
 } from "@/components";
 import { useAuth } from "@/hooks";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   fetchAllInvestments,
   updateInvestment,
   deleteInvestment,
+  getToken,
 } from "@/utils";
 
 interface Investment {
@@ -46,7 +46,7 @@ export default function InvestmentScreen() {
   const fetchInvestments = async () => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (!currentUser?._id || !token) return;
 
       const data = await fetchAllInvestments(currentUser._id, token);
@@ -73,7 +73,7 @@ export default function InvestmentScreen() {
   const handleUpdateInvestment = async () => {
     try {
       if (!selectedInvestment) return;
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (!token || !currentUser?._id) return;
 
       const updatedData = {
@@ -102,7 +102,7 @@ export default function InvestmentScreen() {
   const handleDeleteInvestment = async () => {
     try {
       if (!selectedInvestment) return;
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (!token || !currentUser?._id) return;
 
       await deleteInvestment(currentUser._id, selectedInvestment._id, token);

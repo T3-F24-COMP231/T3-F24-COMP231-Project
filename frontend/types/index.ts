@@ -8,3 +8,4 @@ export * from "./Investment";
 export * from "./Role";
 export * from "./Transaction";
 export * from "./Activity"
+export * from "./Saving";
