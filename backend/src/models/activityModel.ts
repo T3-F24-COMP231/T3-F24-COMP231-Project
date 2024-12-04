@@ -1,30 +1,42 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+const mongoose = require("mongoose");
 
-export interface IActivity extends Document {
-  userId?: mongoose.Schema.Types.ObjectId;
-  adminId?: mongoose.Schema.Types.ObjectId;
-  action: string;
-  entity?: string;
-  entityId?: mongoose.Schema.Types.ObjectId;
-  metadata?: Record<string, any>; 
-  ipAddress?: string;
-  userAgent?: string;
-  timestamp: Date;
-}
-
-const ActivitySchema = new Schema<IActivity>(
+const activitySchema = new mongoose.Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    adminId: { type: Schema.Types.ObjectId, ref: "Admin" },
-    action: { type: String, required: true },
-    entity: { type: String },
-    entityId: { type: Schema.Types.ObjectId },
-    metadata: { type: Schema.Types.Mixed },
-    ipAddress: { type: String },
-    userAgent: { type: String },
-    timestamp: { type: Date, default: Date.now },
+    event: {
+      type: String,
+      required: true,
+      enum: [
+        // User-related events
+        "USER_SIGNUP",
+        "USER_SIGNUP_FAILED",
+        "USER_SIGNUP_ERROR",
+        "USER_LOGIN",
+        "USER_LOGIN_FAILED",
+        "USER_LOGIN_ERROR",
+        "USER_LOGOUT",
+        "USER_LOGOUT_ERROR",
+        "USER_DELETE_ACCOUNT",
+      ],
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    actionBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false, // Optional for system-wide activities
+    },
+    metaData: {
+      type: Object,
+      default: {},
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
 
-export const Activity: Model<IActivity> = mongoose.model("Activity", ActivitySchema);
+export const Activity = mongoose.model("Activity", activitySchema);

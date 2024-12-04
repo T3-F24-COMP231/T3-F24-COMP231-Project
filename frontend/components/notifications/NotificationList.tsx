@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { FlatList, ActivityIndicator, Text } from "react-native";
+import {
+  FlatList,
+  ActivityIndicator,
+  Text,
+  RefreshControl,
+} from "react-native";
 import NotificationCard from "./NotificationCard";
 import { apiRequest, getToken } from "@/utils";
 import { useTheme } from "@/hooks";
@@ -40,6 +45,9 @@ const NotificationList = ({ userId }: { userId: string | undefined }) => {
       data={notifications}
       keyExtractor={(item) => item._id}
       renderItem={({ item }) => <NotificationCard notification={item} />}
+      refreshControl={
+        <RefreshControl refreshing={loading} onRefresh={fetchNotifications} />
+      }
       ListEmptyComponent={
         <CustomListEmpty
           message="No notifications found"

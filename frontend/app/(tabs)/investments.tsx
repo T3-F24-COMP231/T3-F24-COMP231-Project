@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Text,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import {
   CustomBackground,
@@ -14,13 +15,14 @@ import {
   CustomHeader,
   CustomInput,
 } from "@/components";
-import { useAuth } from "@/hooks";
+import { useAuth, useTheme } from "@/hooks";
 import { fetchAllInvestments, formatNumber } from "@/utils";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IInvestment } from "@/types";
 
 export default function Investment() {
+  const {theme} = useTheme();
   const { currentUser } = useAuth();
   const router = useRouter();
   const [investments, setInvestments] = useState<IInvestment[]>([]);
@@ -140,7 +142,7 @@ export default function Investment() {
   if (loading) {
     return (
       <CustomBackground style={styles.container}>
-        <ActivityIndicator size="large" color="#4a5dff" />
+        <ActivityIndicator size="large" color={theme.purple}/>
       </CustomBackground>
     );
   }
@@ -162,6 +164,9 @@ export default function Investment() {
           <CustomText style={styles.emptyMessage}>
             No investments found.
           </CustomText>
+        }
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fetchInvestments} />
         }
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"

@@ -36,8 +36,6 @@ app.use("/api", notificationRoutes);
 app.use("/api", transactionRoutes);
 app.use("/api", activityRoutes);
 
-
-
 // app.use(cors({
 //   origin: 'http://localhost:4000',
 //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],

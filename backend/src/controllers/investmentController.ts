@@ -49,7 +49,7 @@ export const getInvestments = async (req: Request, res: Response) => {
     const investments = await Investment.find({ userId });
 
     if (!investments.length) {
-      return sendError(res, "No investments found for this user", 204);
+      res.status(204).json({messgae: "No investments found for this user"});
     }
 
     sendSuccess(res, investments, "Investments fetched successfully");

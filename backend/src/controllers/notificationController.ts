@@ -3,16 +3,19 @@ import { Notification } from "../models";
 import { ExpressHandler } from "../types";
 import { sendError, sendSuccess } from "../utils";
 
-export const getNotifications = async (req: Request, res: Response) => {
+export const getNotifications: ExpressHandler = async (req, res) => {
   try {
     const { userId } = req.params;
-    // const notifications = await Notification.find({ userId });
+
     const notifications = await Notification.find({ userId }).sort({
       createdAt: -1,
     });
+
     if (!notifications.length) {
-      sendSuccess(res, null, "No notifications found");
+      res.status(204).json({ message: "No notifications found" });
+      return;
     }
+
     sendSuccess(res, notifications);
   } catch (error) {
     sendError(res, "Error fetching notifications", 500);
