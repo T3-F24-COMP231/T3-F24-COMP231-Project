@@ -6,6 +6,8 @@ export type Theme = {
   white: string;
   border: string;
   purple: string;
+  darkGray: string;
+  lightGray: string;
   background: string;
   tabIconDefault: string;
   tabIconSelected: string;

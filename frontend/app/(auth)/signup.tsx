@@ -44,8 +44,6 @@ const Signup = () => {
     try {
       setLoading(true);
       await signup(name, email, password);
-      Alert.alert("Success", "Account created successfully!");
-      router.push("/(tabs)");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An error occurred.";

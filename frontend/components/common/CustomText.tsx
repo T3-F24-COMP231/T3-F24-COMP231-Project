@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, TextProps } from "react-native";
 import useTheme from "../../hooks/useThemeColor";
-import { getGlobalStyles } from "@/styles";
+import { getGlobalStyles } from "../../styles";
 
 interface CustomTextProps extends TextProps {
   style?: {};
