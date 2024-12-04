@@ -1,4 +1,4 @@
-import { sendError, sendSuccess } from "../utils";
+import { logActivity, extractDeviceInfo, sendError, sendSuccess } from "../utils";
 import { Debt, Notification, Transaction } from "../models";
 import { ExpressHandler } from "../types";
 
@@ -12,7 +12,14 @@ export const addDebt: ExpressHandler = async (req, res) => {
     }
 
     const debt = await Debt.create({ userId, title, amount, description });
+ 
+    await logActivity({
+      event: "ADD_DEBT",
+      description: `Debt created for user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
 
+    });
     // Log transaction
     await Transaction.create({
       userId,
@@ -96,7 +103,13 @@ export const updateDebt: ExpressHandler = async (req, res) => {
       type: "debt",
       resourceId: updatedDebt._id,
     });
+    await logActivity({
+      event: "UPDATE_DEBT",
+      description: `Debt updated by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
 
+    });
     sendSuccess(res, updatedDebt, "Debt information successfully updated");
   } catch (error) {
     const errorMessage =
@@ -125,6 +138,14 @@ export const deleteDebt: ExpressHandler = async (req, res) => {
       { deleted: true }
     );
 
+    //log activity
+    await logActivity({
+      event: "DELETE_DEBT",
+      description: `Debt deleted by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
+    });
     // Send notification
     await Notification.create({
       userId,

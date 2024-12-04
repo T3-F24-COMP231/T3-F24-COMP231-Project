@@ -58,6 +58,15 @@ export default function Settings() {
               <Ionicons name="chevron-forward" size={24} color={theme.text} />
             </TouchableOpacity>
           )}
+          {currentUser && hasPermission(currentUser, "view:logs") && (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.push("/(screens)/admin/ViewActivitiesScreen")}
+            >
+              <CustomText>View Activity Logs</CustomText>
+              <Ionicons name="chevron-forward" size={24} color={theme.text} />
+            </TouchableOpacity>
+          )}
           <View
             style={{
               flexDirection: "row",

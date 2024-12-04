@@ -1,4 +1,4 @@
-import { sendError, sendSuccess } from "../utils";
+import {logActivity, extractDeviceInfo, sendError, sendSuccess } from "../utils";
 import { Income, Notification, Transaction } from "../models";
 import { ExpressHandler } from "../types";
 
@@ -17,6 +17,22 @@ export const addIncome: ExpressHandler = async (req, res) => {
       amount,
       description,
       originalId: income._id,
+    });
+
+    await logActivity({
+      event: "UPDATE_DEBT",
+      description: `Debt updated by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
+    });
+
+    await logActivity({
+      event: "ADD_INCOME",
+      description: `Income added by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
     });
 
     // Send notification
@@ -66,6 +82,7 @@ export const updateIncome: ExpressHandler = async (req, res) => {
       return sendError(res, "Income not found for this user", 404);
     }
 
+   
     // Update associated transaction
     await Transaction.findOneAndUpdate(
       { originalId: updatedIncome._id, userId },
@@ -76,6 +93,14 @@ export const updateIncome: ExpressHandler = async (req, res) => {
       }
     );
 
+     //log update activity
+     await logActivity({
+      event: "UPDATE_INCOME",
+      description: `income updated by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
+    });
     // Send notification
     await Notification.create({
       userId,
@@ -111,6 +136,14 @@ export const deleteIncome: ExpressHandler = async (req, res) => {
       { deleted: true }
     );
 
+     //log delete activity
+     await logActivity({
+      event: "DELETE_INCOME",
+      description: `income deleted by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
+    });
     // Send notification
     await Notification.create({
       userId,

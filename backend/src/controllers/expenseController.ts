@@ -1,6 +1,6 @@
 import { Category, Expense, Notification, Transaction } from "../models";
 import { ExpressHandler } from "../types";
-import { getStartOfMonth, getStartOfWeek, sendError, sendSuccess } from "../utils";
+import { getStartOfMonth, getStartOfWeek, logActivity, extractDeviceInfo, sendError, sendSuccess } from "../utils";
 
 export const addExpense: ExpressHandler = async (req, res) => {
   try {
@@ -24,6 +24,14 @@ export const addExpense: ExpressHandler = async (req, res) => {
       category: existingCategory.name,
     });
 
+    //log activity for expense
+    await logActivity({
+      event: "ADD_EXPENSE",
+      description: `Expense created by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
+    });
     // Log transaction
     await Transaction.create({
       userId,
@@ -91,6 +99,15 @@ export const updateExpense: ExpressHandler = async (req, res) => {
       }
     );
 
+    await logActivity({
+      event: "UPDATE_EXPENSES",
+      description: `Expenses updated by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
+    });
+
+
     // Send notification
     await Notification.create({
       userId,
@@ -126,6 +143,13 @@ export const deleteExpense: ExpressHandler = async (req, res) => {
       { deleted: true }
     );
 
+    await logActivity({
+      event: "DELETE_EXPENSES",
+      description: `Expenses deleted by user : ${userId}`,
+      actionBy:userId,
+      metaData: { userId: userId, ...extractDeviceInfo(req) },
+
+    });
     // Send notification
     await Notification.create({
       userId,

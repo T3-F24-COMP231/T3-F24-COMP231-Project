@@ -8,3 +8,4 @@ export * from "./Category";
 export * from "./Investment";
 export * from "./Notification";
 export * from "./Transaction";
+export * from "./Activity";
