@@ -6,13 +6,13 @@ import {
   ScrollView,
   ActivityIndicator,
   Text,
+  RefreshControl,
 } from "react-native";
 import { CustomBackground, CustomHeader, CustomText } from "@/components";
 import { useAuth, useTheme } from "@/hooks";
 import { useRouter } from "expo-router";
-import { IExpense, IIncome, IDebt } from "@/types";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { apiRequest, CleanOutput } from "@/utils";
+import { IExpense, IIncome, IDebt, ISaving } from "@/types";
+import { apiRequest, CleanOutput, getToken } from "@/utils";
 import { Ionicons } from "@expo/vector-icons";
 
 type ValidRoutes =
@@ -39,6 +39,7 @@ export default function Index() {
   const [expenses, setExpenses] = useState<IExpense[]>([]);
   const [debts, setDebts] = useState<IDebt[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [savings, setSavings] = useState<ISaving[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,47 +48,55 @@ export default function Index() {
     }
   }, [currentUser, isLoading, router]);
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      if (currentUser?._id && token) {
+        // Fetch incomes
+        const incomesData = await apiRequest(
+          `/users/${currentUser._id}/incomes`,
+          "GET",
+          undefined,
+          token
+        );
+        setIncomes(incomesData || []);
+
+        // Fetch expenses
+        const expensesData = await apiRequest(
+          `/users/${currentUser._id}/expenses`,
+          "GET",
+          undefined,
+          token
+        );
+        setExpenses(expensesData || []);
+
+        // Fetch debts
+        const debtsData = await apiRequest(
+          `/users/${currentUser._id}/debts`,
+          "GET",
+          undefined,
+          token
+        );
+        setDebts(debtsData || []);
+
+        // Fetch savings
+        const savingsData = await apiRequest(
+          `/users/${currentUser?._id}/savings`,
+          "GET",
+          undefined,
+          token
+        );
+        setSavings(savingsData || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   // Fetch data from the backend
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const token = await AsyncStorage.getItem("token");
-        if (currentUser?._id && token) {
-          // Fetch incomes
-          const incomesData = await apiRequest(
-            `/users/${currentUser._id}/incomes`,
-            "GET",
-            undefined,
-            token
-          );
-          setIncomes(incomesData || []);
-
-          // Fetch expenses
-          const expensesData = await apiRequest(
-            `/users/${currentUser._id}/expenses`,
-            "GET",
-            undefined,
-            token
-          );
-          setExpenses(expensesData || []);
-
-          // Fetch debts
-          const debtsData = await apiRequest(
-            `/users/${currentUser._id}/debts`,
-            "GET",
-            undefined,
-            token
-          );
-          setDebts(debtsData || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (currentUser) {
       fetchData();
     }
@@ -102,6 +111,8 @@ export default function Index() {
 
   const getTotalDebt = () =>
     debts.reduce((total, debt) => total + (debt.amount || 0), 0);
+  const getTotalSaving = () =>
+    savings.reduce((total, saving) => total + (saving.savedAmount || 0), 0);
 
   if (isLoading || loading) {
     return (
@@ -137,7 +148,7 @@ export default function Index() {
       title: "Savings",
       viewAllRoute: "/(screens)/savings",
       addNewRoute: "/(screens)/savings/AddSavingsScreen",
-      getTotal: () => 0,
+      getTotal: getTotalSaving,
       buttonText: "Add New Savings",
     },
   ];
@@ -148,6 +159,9 @@ export default function Index() {
         <ScrollView
           contentContainerStyle={styles.scrollView}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={fetchData} />
+          }
         >
           <CustomHeader
             title={`Welcome, ${currentUser.name}`}

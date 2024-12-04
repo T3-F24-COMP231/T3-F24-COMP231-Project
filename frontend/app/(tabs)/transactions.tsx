@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Text,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import {
   CustomBackground,
@@ -64,6 +65,9 @@ const TransactionScreen = () => {
       <FlatList
         data={transactions}
         keyExtractor={(item) => item._id}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fetchTransactions} />
+        }
         renderItem={({ item }) => {
           const textColor =
             item.type === "income"

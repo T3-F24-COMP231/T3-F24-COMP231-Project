@@ -58,6 +58,15 @@ export default function Settings() {
               <Ionicons name="chevron-forward" size={24} color={theme.text} />
             </TouchableOpacity>
           )}
+          {currentUser && hasPermission(currentUser, "view:logs") && (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.push("/(screens)/admin/ViewActivitiesScreen")}
+            >
+              <CustomText>View Activity Logs</CustomText>
+              <Ionicons name="chevron-forward" size={24} color={theme.text} />
+            </TouchableOpacity>
+          )}
           <View
             style={{
               flexDirection: "row",
@@ -79,8 +88,7 @@ export default function Settings() {
             <Switch
               value={isDarkMode}
               onValueChange={toggleMode}
-              thumbColor={isDarkMode ? "#4a5dff" : "#f0f0f0"}
-              trackColor={{ false: "#4a5dff", true: "#fff" }}
+              thumbColor={isDarkMode ? theme.purple : "#ccc"}
             />
           </View>
         </View>

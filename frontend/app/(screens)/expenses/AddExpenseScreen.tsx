@@ -2,22 +2,22 @@ import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
   Alert,
-  TouchableOpacity,
-  FlatList,
-  Text,
   View,
+  FlatList,
+  TouchableOpacity,
+  Text,
 } from "react-native";
 import {
   CustomBackground,
-  CustomBottomSheet,
   CustomButton,
+  CustomHeader,
   CustomInput,
   CustomModal,
   CustomText,
   CustomView,
   KeyboardLayout,
 } from "@/components";
-import { addExpense, apiRequest } from "@/utils";
+import { addExpense, apiRequest, getToken } from "@/utils";
 import { useAuth } from "@/hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -43,7 +43,7 @@ export default function AddExpenseScreen() {
   // Fetch categories from the backend
   const fetchCategories = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (!token) throw new Error("Token not found");
 
       const data = await apiRequest(
@@ -67,7 +67,7 @@ export default function AddExpenseScreen() {
   // Handle adding a new expense
   const handleAddExpense = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
+      const token = await getToken();
       if (!currentUser?._id || !token) return;
 
       await addExpense(
@@ -90,9 +90,8 @@ export default function AddExpenseScreen() {
             onPress: resetForm,
           },
           {
-            text: "Go home",
-            onPress: () => router.replace("/(tabs)"),
-            style: "cancel",
+            text: "View Expenses",
+            onPress: () => router.replace("/(screens)/expenses"),
           },
         ],
         { cancelable: false }
@@ -121,48 +120,46 @@ export default function AddExpenseScreen() {
   return (
     <KeyboardLayout>
       <CustomBackground style={styles.container}>
-        <CustomBottomSheet title="Add New Expense">
-          <View style={styles.content}>
-            <CustomInput
-              placeholder="Title"
-              value={title}
-              onChangeText={setTitle}
-              style={styles.input}
-            />
-            <CustomInput
-              placeholder="Amount"
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <CustomInput
-              placeholder="Description"
-              value={description}
-              onChangeText={setDescription}
-              style={styles.input}
-            />
+        <CustomHeader back title="Add New Expense" />
+        <View style={styles.content}>
+          <CustomInput
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+            style={styles.input}
+          />
+          <CustomInput
+            placeholder="Amount"
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+            style={styles.input}
+          />
+          <CustomInput
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+            style={styles.input}
+          />
 
-            {/* Category Selection */}
-            <TouchableOpacity
-              style={styles.categoryButton}
-              onPress={() => setShowCategoryModal(true)}
+          {/* Category Selection */}
+          <TouchableOpacity
+            style={styles.categoryButton}
+            onPress={() => setShowCategoryModal(true)}
+          >
+            <CustomText
+              style={{ fontSize: 14, color: "#000", fontWeight: "500" }}
             >
-              <CustomText
-                style={{ fontSize: 14, color: "#000", fontWeight: "500" }}
-              >
-                {selectedCategory || "Select a Category"}
-              </CustomText>
-            </TouchableOpacity>
+              {selectedCategory || "Select a Category"}
+            </CustomText>
+          </TouchableOpacity>
 
-            <CustomButton
-              text="Submit Expense"
-              onPress={handleAddExpense}
-              style={styles.button}
-            />
-          </View>
-        </CustomBottomSheet>
-        {/* <CustomText style={styles.title}>Add New Expense</CustomText> */}
+          <CustomButton
+            text="Submit Expense"
+            onPress={handleAddExpense}
+            style={styles.button}
+          />
+        </View>
 
         {/* Category Modal */}
         <CustomModal
@@ -199,12 +196,10 @@ export default function AddExpenseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "flex-end",
+    padding: 20,
   },
   content: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    marginTop: 20,
   },
   title: {
     fontSize: 24,

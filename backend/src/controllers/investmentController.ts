@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { sendError, sendSuccess } from "../utils";
+import { sendError, sendSuccess, logActivity } from "../utils";
 import { Investment, Notification, Transaction } from "../models";
 
 // Add a new investment
@@ -34,10 +34,25 @@ export const addInvestment = async (req: Request, res: Response) => {
       resourceId: investment._id,
     });
 
+    logActivity({
+      event: "ADD_INVESTMENT_SUCCESS",
+      description: "Investment successfully added",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, investment },
+    });
+
     sendSuccess(res, investment, "Investment successfully added");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "ADD_INVESTMENT_ERROR",
+      description: `Failed to add investment: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId, body: req.body },
+    });
+
     sendError(res, `Failed to add investment: ${errorMessage}`, 500);
   }
 };
@@ -49,13 +64,35 @@ export const getInvestments = async (req: Request, res: Response) => {
     const investments = await Investment.find({ userId });
 
     if (!investments.length) {
-      return sendError(res, "No investments found for this user", 204);
+      logActivity({
+        event: "GET_INVESTMENTS_SUCCESS",
+        description: "No investments found for this user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId },
+      });
+
+      return sendSuccess(res, [], "No investments found for this user");
     }
+
+    logActivity({
+      event: "GET_INVESTMENTS_SUCCESS",
+      description: "Investments fetched successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, count: investments.length },
+    });
 
     sendSuccess(res, investments, "Investments fetched successfully");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "GET_INVESTMENTS_ERROR",
+      description: `Failed to fetch investments: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId },
+    });
+
     sendError(res, `Failed to fetch investments: ${errorMessage}`, 500);
   }
 };
@@ -67,13 +104,35 @@ export const getInvestmentById = async (req: Request, res: Response) => {
     const investment = await Investment.findOne({ _id: id, userId });
 
     if (!investment) {
+      logActivity({
+        event: "GET_INVESTMENT_BY_ID_FAILED",
+        description: "Investment not found",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId, id },
+      });
+
       return sendError(res, "Investment not found", 404);
     }
+
+    logActivity({
+      event: "GET_INVESTMENT_BY_ID_SUCCESS",
+      description: "Investment fetched successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, investment },
+    });
 
     sendSuccess(res, investment, "Investment fetched successfully");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "GET_INVESTMENT_BY_ID_ERROR",
+      description: `Failed to fetch investment: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId, id: req.params.id },
+    });
+
     sendError(res, `Failed to fetch investment: ${errorMessage}`, 500);
   }
 };
@@ -90,6 +149,13 @@ export const updateInvestment = async (req: Request, res: Response) => {
     );
 
     if (!updatedInvestment) {
+      logActivity({
+        event: "UPDATE_INVESTMENT_FAILED",
+        description: "Investment not found",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId, id, updates: req.body },
+      });
+
       return sendError(res, "Investment not found", 404);
     }
 
@@ -111,10 +177,25 @@ export const updateInvestment = async (req: Request, res: Response) => {
       resourceId: updatedInvestment._id,
     });
 
+    logActivity({
+      event: "UPDATE_INVESTMENT_SUCCESS",
+      description: "Investment successfully updated",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, updatedInvestment },
+    });
+
     sendSuccess(res, updatedInvestment, "Investment successfully updated");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "UPDATE_INVESTMENT_ERROR",
+      description: `Failed to update investment: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId, id: req.params.id, updates: req.body },
+    });
+
     sendError(res, `Failed to update investment: ${errorMessage}`, 500);
   }
 };
@@ -130,6 +211,13 @@ export const deleteInvestment = async (req: Request, res: Response) => {
     });
 
     if (!deletedInvestment) {
+      logActivity({
+        event: "DELETE_INVESTMENT_FAILED",
+        description: "Investment not found",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId, id },
+      });
+
       return sendError(res, "Investment not found", 404);
     }
 
@@ -147,10 +235,25 @@ export const deleteInvestment = async (req: Request, res: Response) => {
       resourceId: deletedInvestment._id,
     });
 
+    logActivity({
+      event: "DELETE_INVESTMENT_SUCCESS",
+      description: "Investment successfully deleted",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, deletedInvestment },
+    });
+
     sendSuccess(res, deletedInvestment, "Investment successfully deleted");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "DELETE_INVESTMENT_ERROR",
+      description: `Failed to delete investment: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId, id: req.params.id },
+    });
+
     sendError(res, `Failed to delete investment: ${errorMessage}`, 500);
   }
 };

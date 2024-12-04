@@ -6,6 +6,8 @@ import {
   Dimensions,
   StyleProp,
   ViewStyle,
+  SafeAreaView,
+  ScrollView,
 } from "react-native";
 import CustomText from "./CustomText";
 import { router } from "expo-router";
@@ -29,7 +31,13 @@ const CustomBottomSheet = ({
 
   return (
     <View style={[styles.overlay, { backgroundColor: theme.background }]}>
-      <View style={[styles.bottomSheetStyle, style, {borderColor: isDarkMode ? "#fff" : ""}]}>
+      <View
+        style={[
+          styles.bottomSheetStyle,
+          style,
+          { borderColor: isDarkMode ? "#fff" : "" },
+        ]}
+      >
         <View style={styles.headerContainer}>
           <TouchableOpacity
             onPress={() => router.back()}

@@ -166,7 +166,7 @@ export default function ExpensesScreen() {
 
   return (
     <CustomBackground style={styles.container}>
-      <CustomHeader title="All Expenses" />
+      <CustomHeader back title="All Expenses" />
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <CustomInput

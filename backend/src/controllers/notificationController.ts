@@ -1,18 +1,21 @@
 import { Request, Response } from "express";
 import { Notification } from "../models";
 import { ExpressHandler } from "../types";
-import { sendError, sendSuccess } from "../utils";
+import { logActivity, sendError, sendSuccess } from "../utils";
 
-export const getNotifications = async (req: Request, res: Response) => {
+export const getNotifications: ExpressHandler = async (req, res) => {
   try {
     const { userId } = req.params;
-    // const notifications = await Notification.find({ userId });
+
     const notifications = await Notification.find({ userId }).sort({
       createdAt: -1,
     });
+
     if (!notifications.length) {
-      sendSuccess(res, null, "No notifications found");
+      res.status(204).json({ message: "No notifications found" });
+      return;
     }
+
     sendSuccess(res, notifications);
   } catch (error) {
     sendError(res, "Error fetching notifications", 500);
@@ -47,5 +50,52 @@ export const markAsRead = async (
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
     sendError(res, `Error updating notification status: ${errorMessage}`, 500);
+  }
+};
+
+export const getUnreadNotificationCount = async (
+  req: Request,
+  res: Response
+) => {
+  const { userId } = req.params;
+
+  try {
+    const count = await Notification.countDocuments({ userId, status: "unread" });
+
+    sendSuccess(
+      res,
+      { unreadCount: count },
+      "Unread notification count fetched successfully"
+    );
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(
+      res,
+      `Failed to fetch unread notification count: ${errorMessage}`,
+      500
+    );
+  }
+};
+
+// Mark all notifications as read
+export const markAllNotificationsAsRead = async (
+  req: Request,
+  res: Response
+) => {
+  const { userId } = req.params;
+
+  try {
+    await Notification.updateMany({ userId, status: "unread" }, { status: "read" });
+
+    sendSuccess(res, null, "All notifications marked as read successfully");
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    sendError(
+      res,
+      `Failed to mark all notifications as read: ${errorMessage}`,
+      500
+    );
   }
 };

@@ -1,4 +1,4 @@
-import { sendError, sendSuccess } from "../utils";
+import { sendError, sendSuccess, logActivity } from "../utils";
 import { Income, Notification, Transaction } from "../models";
 import { ExpressHandler } from "../types";
 
@@ -27,10 +27,25 @@ export const addIncome: ExpressHandler = async (req, res) => {
       resourceId: income._id,
     });
 
+    logActivity({
+      event: "ADD_INCOME_SUCCESS",
+      description: "New income successfully added",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, income },
+    });
+
     sendSuccess(res, income, "Income successfully added");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "ADD_INCOME_ERROR",
+      description: `Failed to add income: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId, body: req.body },
+    });
+
     sendError(res, `Failed to add income: ${errorMessage}`, 500);
   }
 };
@@ -41,13 +56,34 @@ export const getIncomes: ExpressHandler = async (req, res) => {
     const incomes = await Income.find({ userId });
 
     if (!incomes.length) {
+      logActivity({
+        event: "GET_INCOMES_SUCCESS",
+        description: "No incomes found for this user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { userId },
+      });
       return sendSuccess(res, [], "No incomes found for this user");
     }
+
+    logActivity({
+      event: "GET_INCOMES_SUCCESS",
+      description: "Fetched incomes successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, count: incomes.length },
+    });
 
     sendSuccess(res, incomes, "Incomes fetched successfully");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "GET_INCOMES_ERROR",
+      description: `Failed to fetch incomes: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId: req.params.userId },
+    });
+
     sendError(res, `Failed to fetch incomes: ${errorMessage}`, 500);
   }
 };
@@ -63,6 +99,12 @@ export const updateIncome: ExpressHandler = async (req, res) => {
     );
 
     if (!updatedIncome) {
+      logActivity({
+        event: "UPDATE_INCOME_FAILED",
+        description: "Income not found for this user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId, updates: req.body },
+      });
       return sendError(res, "Income not found for this user", 404);
     }
 
@@ -84,10 +126,25 @@ export const updateIncome: ExpressHandler = async (req, res) => {
       resourceId: updatedIncome._id,
     });
 
+    logActivity({
+      event: "UPDATE_INCOME_SUCCESS",
+      description: "Income updated successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, updatedIncome },
+    });
+
     sendSuccess(res, updatedIncome, "Income successfully updated");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "UPDATE_INCOME_ERROR",
+      description: `Failed to update income: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { id: req.params.id, userId: req.params.userId, updates: req.body },
+    });
+
     sendError(res, `Failed to update income: ${errorMessage}`, 500);
   }
 };
@@ -102,6 +159,12 @@ export const deleteIncome: ExpressHandler = async (req, res) => {
     });
 
     if (!deletedIncome) {
+      logActivity({
+        event: "DELETE_INCOME_FAILED",
+        description: "Income not found for this user",
+        actionBy: req?.user?.id || "Unknown",
+        metaData: { id, userId },
+      });
       return sendError(res, "Income not found for this user", 404);
     }
 
@@ -119,10 +182,25 @@ export const deleteIncome: ExpressHandler = async (req, res) => {
       resourceId: deletedIncome._id,
     });
 
+    logActivity({
+      event: "DELETE_INCOME_SUCCESS",
+      description: "Income deleted successfully",
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { userId, deletedIncome },
+    });
+
     sendSuccess(res, deletedIncome, "Income successfully deleted");
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
+
+    logActivity({
+      event: "DELETE_INCOME_ERROR",
+      description: `Failed to delete income: ${errorMessage}`,
+      actionBy: req?.user?.id || "Unknown",
+      metaData: { id: req.params.id, userId: req.params.userId },
+    });
+
     sendError(res, `Failed to delete income: ${errorMessage}`, 500);
   }
 };

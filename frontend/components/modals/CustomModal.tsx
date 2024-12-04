@@ -1,12 +1,8 @@
 import React from "react";
-import {
-  Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { Modal, View, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
 import { CustomText } from "../common";
 import useTheme from "../../hooks/useThemeColor";
+import KeyboardAvoidingViewLayout from "../layouts/KeyboardAvoidingViewLayout";
 
 interface IModal {
   isVisible: boolean;
@@ -18,36 +14,38 @@ interface IModal {
 const CustomModal = ({ isVisible, onClose, children, title }: IModal) => {
   const { theme } = useTheme();
   return (
-    <Modal
-      visible={isVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View
-          style={[
-            styles.modalContainer,
-            {
-              backgroundColor: theme.background,
-              borderColor: theme.border,
-              borderWidth: 0.5,
-            },
-          ]}
-        >
-          {/* Modal Header */}
-          <View style={styles.modalHeader}>
-            <CustomText style={styles.modalTitle}>{title}</CustomText>
-            <TouchableOpacity onPress={onClose}>
-              <CustomText style={styles.closeButtonText}>X</CustomText>
-            </TouchableOpacity>
-          </View>
+    <SafeAreaView style={{flex: 1}}>
+      <Modal
+        visible={isVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalContainer,
+              {
+                backgroundColor: theme.background,
+                borderColor: theme.border,
+                borderWidth: 0.5,
+              },
+            ]}
+          >
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <CustomText style={styles.modalTitle}>{title}</CustomText>
+              <TouchableOpacity onPress={onClose}>
+                <CustomText style={styles.closeButtonText}>X</CustomText>
+              </TouchableOpacity>
+            </View>
 
-          {/* Modal Content */}
-          <View style={styles.modalContentContainer}>{children}</View>
+            {/* Modal Content */}
+            <View style={styles.modalContentContainer}>{children}</View>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </SafeAreaView>
   );
 };
 

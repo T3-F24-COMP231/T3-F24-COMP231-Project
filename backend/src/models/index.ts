@@ -6,3 +6,5 @@ export * from "./investmentModel";
 export * from "./roleModel";
 export * from "./notificationModel";
 export * from "./transactionModel";
+export * from "./activityModel";
+export * from "./savingModel"

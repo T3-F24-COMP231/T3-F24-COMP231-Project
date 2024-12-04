@@ -164,7 +164,7 @@ export default function IncomesScreen() {
 
   return (
     <CustomBackground style={styles.container}>
-      <CustomHeader title="All Incomes" />
+      <CustomHeader back title="All Incomes" />
       <View style={styles.searchContainer}>
         <CustomInput
           placeholder="Search incomes..."
