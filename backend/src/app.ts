@@ -12,6 +12,7 @@ import roleRoutes from './routes/roleRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import transactionRoutes from './routes/transactionRoutes';
 import activityRoutes from './routes/activityRoutes';
+import savingRoutes from './routes/savingRoutes';
 
 const app: Application = express();
 
@@ -35,6 +36,7 @@ app.use("/api", roleRoutes);
 app.use("/api", notificationRoutes);
 app.use("/api", transactionRoutes);
 app.use("/api", activityRoutes);
+app.use("/api", savingRoutes);
 
 // app.use(cors({
 //   origin: 'http://localhost:4000',
