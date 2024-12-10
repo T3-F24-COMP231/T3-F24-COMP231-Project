@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import config from "../config/config";
 import { extractDeviceInfo, logActivity, sendError, sendSuccess } from "../utils";
 import User from "../models/userModel";
 import { ExpressHandler } from "../types";
+require('dotenv').config();
 
 export const Signup: ExpressHandler = async (req, res) => {
   const { name, email, password, role = "Finance Tracker" } = req.body;
@@ -79,7 +79,7 @@ export const Login: ExpressHandler = async (req, res) => {
 
     const token = jwt.sign(
       { userId: user._id, role: user.role },
-      config.jwtSecret,
+      process.env.JWT_SECRET as string,
       { expiresIn: "1h" }
     );
 

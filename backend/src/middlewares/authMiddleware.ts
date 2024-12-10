@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import User from "../models/userModel";
-import config from "../config/config";
 import { DecodedToken } from "../types";
 import { sendError } from "../utils";
+require('dotenv').config();
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -13,7 +13,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
   }
 
   try {
-    const decoded = jwt.verify(token, config.jwtSecret) as DecodedToken;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "") as DecodedToken;
     const user = await User.findById(decoded.userId).select("-password");
 
     if (!user) {
