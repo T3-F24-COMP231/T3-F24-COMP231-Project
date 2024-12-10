@@ -38,13 +38,6 @@ app.use("/api", transactionRoutes);
 app.use("/api", activityRoutes);
 app.use("/api", savingRoutes);
 
-// app.use(cors({
-//   origin: 'http://localhost:4000',
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true,
-// }));
-
 app.get("/", (req, res) => {
   res.send("Welcome to T3-F24-COMP231 API!");
 });
