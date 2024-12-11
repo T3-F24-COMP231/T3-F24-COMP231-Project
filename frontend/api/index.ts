@@ -1,1 +1,1 @@
-export const BASE_URL = "pefima-2v061ayo9-festusasiyanbis-projects.vercel.app/api";
+export const BASE_URL = "https://pefima.vercel.app/api";
