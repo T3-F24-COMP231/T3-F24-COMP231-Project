@@ -1,4 +1,4 @@
-package com.y
+package com.t3f24team.com
 
 import android.app.Application
 import android.content.res.Configuration

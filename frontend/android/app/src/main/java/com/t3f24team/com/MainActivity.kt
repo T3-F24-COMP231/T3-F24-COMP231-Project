@@ -1,4 +1,4 @@
-package com.y
+package com.t3f24team.com
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

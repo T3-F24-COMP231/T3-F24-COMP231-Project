@@ -22,10 +22,10 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.y"
+      "package": "com.t3f24team.com"
     },
     "web": {
-      "bundler": "metro",
+      "bundler": "webpack",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },

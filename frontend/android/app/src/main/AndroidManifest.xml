@@ -25,7 +25,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
-        <data android:scheme="com.y"/>
+        <data android:scheme="com.t3f24team.com"/>
         <data android:scheme="exp+frontend"/>
       </intent-filter>
     </activity>
