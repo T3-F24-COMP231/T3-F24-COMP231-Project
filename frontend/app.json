@@ -14,16 +14,18 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "y"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.t3f24team.com"
     },
     "web": {
-      "bundler": "metro",
+      "bundler": "webpack",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
@@ -33,6 +35,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "75eb4cfb-6458-4cb2-b886-f696571aa3bd"
+      }
     }
   }
 }
