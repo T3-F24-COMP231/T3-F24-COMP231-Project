@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
 import app from "./app";
-require('dotenv').config();
+import dotenv from "dotenv";
+dotenv.config();
 
 mongoose.Promise = global.Promise;
-
+const PORT = process.env.PORT || 4000;
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI as string);
+    await mongoose.connect(process.env.MONGODB_URI as string);
     console.log("MongoDB connected successfully");
 
-    app.listen(process.env.PORT, () => {
-      console.log(`Server is running on http://localhost:${process.env.PORT}`);
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
     });
   } catch (err: unknown) {
     console.error("MongoDB connection error:", (err as Error).message);
